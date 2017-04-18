@@ -208,8 +208,8 @@ Wasmtcl_Init(Tcl_Interp* interp)
                          (ClientData) NULL, 
                          (Tcl_CmdDeleteProc *) NULL);
 
-    Tcl_Export(interp, emtclNs, "dom", 0);
-    Tcl_Export(interp, emtclNs, "jscall", 0);
+    Tcl_Export(interp, wasmtclNs, "dom", 0);
+    Tcl_Export(interp, wasmtclNs, "jscall", 0);
     Tcl_PkgProvide(interp, "wasmtcl", "1.0.0");
     return TCL_OK;
 }

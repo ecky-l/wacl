@@ -5,10 +5,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
   <link rel="stylesheet" href="stylesheet.css" media="screen">
-  <script type="javascript" src="jquery-3.2.0.min.js"></script>
-  <script data-main="emtcl/main" src="emtcl/require.js"></script>
-  
-  <title>EmTcl</title>
+  <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
+  <script type="text/javascript" src="wasmtcl.js"></script>
+  <title>wasmTcl: Tcl in WebAssembly</title>
   <meta name="description" content="Tcl compiled with emscripten">
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -21,14 +20,14 @@
     <div id="container">
       <div id="main" role="main">
         <article class="_commented_markdown-body">
-          <h3>EmTcl Test Page</h3>
-          <p>This is a simple test page for running Tcl in the browser on the client side, courtesy of emscripten. 
+          <h3>wasmTcl Test Page</h3>
+          <p>This is a simple test page for running Tcl in the browser on the client side. 
           Put your code in the box below and press Ctrl-Enter to eval it. For using the dom command, type e.g.:
           </p>
           <pre>
-::emtcl::dom attr "#dom-d &gt; span" textContent CHANGE
-::emtcl::dom css #dom-playground backgroundColor red
-::emtcl::dom css "#dom-playground li" borderColor blue
+::wasmtcl::dom attr "#dom-d &gt; span" textContent CHANGE
+::wasmtcl::dom css #dom-playground backgroundColor red
+::wasmtcl::dom css "#dom-playground li" borderColor blue
           </pre>
           <div id="dom-playground">
             #dom-playground
@@ -46,22 +45,15 @@
               <span class="dom-subchild">span.dom-subchild</span>
             </div>
           </div>
-<!--
-# Toy DOM library written for the EmTcl demo
-emtcl::dom attr "#dom-d &gt; span" textContent CHANGE
-emtcl::dom css #dom-playground backgroundColor red
-emtcl::dom css "#dom-playground li" borderColor blue
--->
           <button id="tcl_run">Run!</button>
           <button id="tcl_test">Just for testing</button>
           <div class="demoarea">
-            <div id="tcl_in"><textarea></textarea></div>
             <div id="tcl_out"><div><pre></pre></div></div>
+            <div id="tcl_in"><textarea></textarea></div>
           </div>
 
           <script>
-          require(['emtcl'], function(module) {
-            module.onReady(function (emtcl) {
+            wasmTcl.onReady(function (interp) {
               'use strict';
               var $inbox = $('#tcl_in > textarea');
               var $outbox = $('#tcl_out > div > pre');
@@ -69,16 +61,16 @@ emtcl::dom css "#dom-playground li" borderColor blue
                 $outbox.text($outbox.text() + val + '\n');
                 $outbox[0].scrollTop = $outbox[0].scrollHeight;
               }
-              emtcl.stdout = emtcl.stderr = outln;
+              interp.stdout = interp.stderr = outln;
               
               $('#tcl_run').on('click', function () {
-                outln(emtcl.Eval($('#tcl_in > textarea').val()));
+                outln(interp.Eval($('#tcl_in > textarea').val()));
               });
               
               $('#tcl_test').on('click', function() {
-                var w = emtcl.jswrap(function(x) {
-                    console.log('Argument x: ' + emtcl.ptr2str(x));
-                    return emtcl.str2ptr("hello from javaScript");
+                var w = interp.jswrap(function(x) {
+                    console.log('Argument x: ' + interp.ptr2str(x));
+                    return interp.str2ptr("hello from javaScript");
                 }, 'string', 'string');
                 console.log(w);
               })
@@ -88,17 +80,16 @@ emtcl::dom css "#dom-playground li" borderColor blue
                 if ((e.keyCode == 10 || e.keyCode == 13) && e.ctrlKey) {
                   outln('% ' + $inbox.val());
                   try {
-                    outln(emtcl.Eval($('#tcl_in > textarea').val()));
+                    outln(interp.Eval($('#tcl_in > textarea').val()));
                   } catch (e) {
                     outln(e.errorInfo);
                   }
                   $inbox.val('');
                 }
               });
-              outln(emtcl.Eval('puts "Tcl version: [info patchlevel]"'));
+              outln(interp.Eval('puts "Tcl version: [info patchlevel]"'));
             });
           
-          });
           </script>
         </article>
       </div>

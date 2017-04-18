@@ -1,5 +1,5 @@
 
-define('emtcl', function() {
+define('wasmtcl', function() {
   var _Interp = null;
   var _getInterp = null;
   var _eval = null;
@@ -20,12 +20,12 @@ define('emtcl', function() {
   var Module = {
     noInitialRun: false,
     noExitRuntime: true,
-    filePackagePrefixURL: 'emtcl/',
-    print: function(txt) { console.log('emtcl stdout: ' + txt); },
-    printErr: function(txt) { console.error('emtcl stderr: ' + txt); },
+    filePackagePrefixURL: 'wasmtcl/',
+    print: function(txt) { console.log('wasmtcl stdout: ' + txt); },
+    printErr: function(txt) { console.error('wasmtcl stderr: ' + txt); },
     preRun: [],
     postRun: function () {
-      _getInterp = Module.cwrap('Emtcl_GetInterp', 'number', []);
+      _getInterp = Module.cwrap('Wasmtcl_GetInterp', 'number', []);
       _eval = Module.cwrap('Tcl_Eval', 'number', ['number', 'string']);
       _getStringResult = Module.cwrap('Tcl_GetStringResult', 'string', ['number']);
       _Interp = _getInterp();
@@ -56,7 +56,7 @@ define('emtcl', function() {
        
         jswrap: function(fcn, returnType, argType) {
           var fnPtr = Runtime.addFunction(fcn);
-          return "::emtcl::jscall " + fnPtr + " " + returnType + " " + argType;
+          return "::wasmtcl::jscall " + fnPtr + " " + returnType + " " + argType;
         },
        
         Eval: function(str) {

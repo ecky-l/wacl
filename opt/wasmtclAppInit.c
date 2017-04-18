@@ -1,6 +1,6 @@
 #include <tcl.h>
 #include <emscripten.h>
-#include "emtcl.h"
+#include "wasmtcl.h"
 
 /*
  * The main interpreter, 
