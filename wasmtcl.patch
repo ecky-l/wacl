@@ -1,0 +1,177 @@
+diff -ruN tcl8.6.6/compat/fake-rfc2553.c tcl/compat/fake-rfc2553.c
+--- tcl8.6.6/compat/fake-rfc2553.c	2016-02-25 21:12:36.000000000 +0100
++++ tcl/compat/fake-rfc2553.c	2017-04-13 10:57:42.695557819 +0200
+@@ -35,6 +35,7 @@
+  * that ai_family is AF_INET. Don't use it for another purpose.
+  */
+ #include "tclInt.h"
++#define HAVE_STRLCPY 1
+ 
+ TCL_DECLARE_MUTEX(netdbMutex)
+ 
+diff -ruN tcl8.6.6/generic/tcl.h tcl/generic/tcl.h
+--- tcl8.6.6/generic/tcl.h	2016-07-22 16:43:05.000000000 +0200
++++ tcl/generic/tcl.h	2017-04-13 10:57:42.709557819 +0200
+@@ -1,3 +1,4 @@
++#undef TCL_WIDE_INT_IS_LONG
+ /*
+  * tcl.h --
+  *
+diff -ruN tcl8.6.6/unix/configure.in tcl/unix/configure.in
+--- tcl8.6.6/unix/configure.in	2016-07-26 16:07:18.000000000 +0200
++++ tcl/unix/configure.in	2017-04-13 10:57:42.709557819 +0200
+@@ -337,39 +337,6 @@
+     AC_DEFINE(NO_STRING_H, 1, [Do we have <string.h>?]) ])
+ 
+ #--------------------------------------------------------------------
+-#	On some systems strstr is broken: it returns a pointer even even if
+-#	the original string is empty.
+-#--------------------------------------------------------------------
+-
+-SC_TCL_CHECK_BROKEN_FUNC(strstr, [
+-    extern int strstr();
+-    exit(strstr("\0test", "test") ? 1 : 0);
+-])
+-
+-#--------------------------------------------------------------------
+-#	Check for strtoul function.  This is tricky because under some
+-#	versions of AIX strtoul returns an incorrect terminator
+-#	pointer for the string "0".
+-#--------------------------------------------------------------------
+-
+-SC_TCL_CHECK_BROKEN_FUNC(strtoul, [
+-    extern int strtoul();
+-    char *term, *string = "0";
+-    exit(strtoul(string,&term,0) != 0 || term != string+1);
+-])
+-
+-#--------------------------------------------------------------------
+-#	Check for the strtod function.  This is tricky because in some
+-#	versions of Linux strtod mis-parses strings starting with "+".
+-#--------------------------------------------------------------------
+-
+-SC_TCL_CHECK_BROKEN_FUNC(strtod, [
+-    extern double strtod();
+-    char *term, *string = " +69";
+-    exit(strtod(string,&term) != 69 || term != string+4);
+-])
+-
+-#--------------------------------------------------------------------
+ #	Under Solaris 2.4, strtod returns the wrong value for the
+ #	terminating character under some conditions.  Check for this
+ #	and if the problem exists use a substitute procedure
+diff -ruN tcl8.6.6/unix/Makefile.in tcl/unix/Makefile.in
+--- tcl8.6.6/unix/Makefile.in	2016-07-26 16:07:18.000000000 +0200
++++ tcl/unix/Makefile.in	2017-04-13 19:26:23.896135764 +0200
+@@ -227,6 +227,7 @@
+ TOP_DIR			= @TCL_SRC_DIR@
+ BUILD_DIR		= @builddir@
+ GENERIC_DIR		= $(TOP_DIR)/generic
++WASMTCL_DIR		= $(TOP_DIR)/../opt
+ TOMMATH_DIR		= $(TOP_DIR)/libtommath
+ COMPAT_DIR		= $(TOP_DIR)/compat
+ TOOL_DIR		= $(TOP_DIR)/tools
+@@ -356,8 +357,10 @@
+ ZLIB_OBJS = Zadler32.o Zcompress.o Zcrc32.o Zdeflate.o Zinfback.o \
+ 	Zinffast.o Zinflate.o Zinftrees.o Ztrees.o Zuncompr.o Zzutil.o
+ 
++WASMTCL_OBJS = wasmtcl.o wasmtclAppInit.o
++
+ TCL_OBJS = ${GENERIC_OBJS} ${UNIX_OBJS} ${NOTIFY_OBJS} ${COMPAT_OBJS} \
+-	${OO_OBJS} @DL_OBJS@ @PLAT_OBJS@
++	${OO_OBJS} ${WASMTCL_OBJS} @DL_OBJS@ @PLAT_OBJS@
+ 
+ OBJS = ${TCL_OBJS} ${TOMMATH_OBJS} @DTRACE_OBJ@ @ZLIB_OBJS@
+ 
+@@ -465,6 +468,10 @@
+ 	$(GENERIC_DIR)/tclAssembly.c \
+ 	$(GENERIC_DIR)/tclZlib.c
+ 
++WASMTCL_SRCS = \
++	$(WASMTCL_DIR)/wasmtcl.c \
++	$(WASMTCL_DIR)/wasmtclAppInit.c
++
+ OO_SRCS = \
+ 	$(GENERIC_DIR)/tclOO.c \
+ 	$(GENERIC_DIR)/tclOOBasic.c \
+@@ -606,7 +613,7 @@
+ # things like "make depend".
+ 
+ SRCS = $(GENERIC_SRCS) $(TOMMATH_SRCS) $(UNIX_SRCS) $(NOTIFY_SRCS) \
+-	$(OO_SRCS) $(STUB_SRCS) @PLAT_SRCS@ @ZLIB_SRCS@
++	$(OO_SRCS) $(WASMTCL_SRCS) $(STUB_SRCS) @PLAT_SRCS@ @ZLIB_SRCS@
+ 
+ #--------------------------------------------------------------------------
+ # Start of rules
+@@ -614,7 +621,7 @@
+ 
+ all: binaries libraries doc packages
+ 
+-binaries: ${LIB_FILE} ${TCL_EXE}
++binaries: ${LIB_FILE}
+ 
+ libraries:
+ 
+@@ -657,7 +664,7 @@
+ #	$(SHELL) config.status
+ 
+ clean: clean-packages
+-	rm -rf *.a *.o libtcl* core errs *~ \#* TAGS *.E a.out \
++	rm -rf *.a *.o libtcl* core errs *~ \#* TAGS *.E a.out* \
+ 		errors ${TCL_EXE} ${TCLTEST_EXE} lib.exp Tcl @DTRACE_HDR@
+ 	cd dltest ; $(MAKE) clean
+ 
+@@ -796,8 +803,6 @@
+ 	@echo "Installing $(LIB_FILE) to $(DLL_INSTALL_DIR)/"
+ 	@@INSTALL_LIB@
+ 	@chmod 555 "$(DLL_INSTALL_DIR)/$(LIB_FILE)"
+-	@echo "Installing ${TCL_EXE} as $(BIN_INSTALL_DIR)/tclsh$(VERSION)${EXE_SUFFIX}"
+-	@$(INSTALL_PROGRAM) ${TCL_EXE} "$(BIN_INSTALL_DIR)/tclsh$(VERSION)${EXE_SUFFIX}"
+ 	@echo "Installing tclConfig.sh to $(CONFIG_INSTALL_DIR)/"
+ 	@$(INSTALL_DATA) tclConfig.sh "$(CONFIG_INSTALL_DIR)/tclConfig.sh"
+ 	@echo "Installing tclooConfig.sh to $(CONFIG_INSTALL_DIR)/"
+@@ -1252,6 +1257,12 @@
+ tclPkg.o: $(GENERIC_DIR)/tclPkg.c
+ 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tclPkg.c
+ 
++wasmtcl.o: $(WASMTCL_DIR)/wasmtcl.c
++	$(CC) -c $(CC_SWITCHES) $(WASMTCL_DIR)/wasmtcl.c
++
++wasmtclAppInit.o: $(WASMTCL_DIR)/wasmtclAppInit.c
++	$(CC) -c $(CC_SWITCHES) $(WASMTCL_DIR)/wasmtclAppInit.c
++
+ # TIP #59, embedding of configuration information into the binary library.
+ #
+ # Part of Tcl's configuration information are the paths where it was installed
+diff -ruN tcl8.6.6/unix/tclUnixCompat.c tcl/unix/tclUnixCompat.c
+--- tcl8.6.6/unix/tclUnixCompat.c	2016-02-25 21:12:38.000000000 +0100
++++ tcl/unix/tclUnixCompat.c	2017-04-13 10:57:42.711557819 +0200
+@@ -1,3 +1,4 @@
++#undef HAVE_CPUID
+ /*
+  * tclUnixCompat.c
+  *
+diff -ruN tcl8.6.6/unix/tclUnixNotfy.c tcl/unix/tclUnixNotfy.c
+--- tcl8.6.6/unix/tclUnixNotfy.c	2016-03-23 12:43:13.000000000 +0100
++++ tcl/unix/tclUnixNotfy.c	2017-04-13 10:57:42.711557819 +0200
+@@ -1059,9 +1059,20 @@
+ 
+ #else
+ 	tsdPtr->readyMasks = tsdPtr->checkMasks;
++#ifdef __EMSCRIPTEN__
++    /*
++     * EL: Emscripten does not support the exception fds, it throws
++     * an assert exception. Therefore we call select() with NULL for
++     * the exceptfds parameter.
++     */
++	numFound = select(tsdPtr->numFdBits, &tsdPtr->readyMasks.readable,
++		&tsdPtr->readyMasks.writable, NULL,
++		timeoutPtr);
++#else
+ 	numFound = select(tsdPtr->numFdBits, &tsdPtr->readyMasks.readable,
+ 		&tsdPtr->readyMasks.writable, &tsdPtr->readyMasks.exception,
+ 		timeoutPtr);
++#endif /* __EMSCRIPTEN__ */
+ 
+ 	/*
+ 	 * Some systems don't clear the masks after an error, so we have to do
