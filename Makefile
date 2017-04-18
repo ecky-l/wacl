@@ -33,9 +33,10 @@ wasmtcl.js: wasmtcl.bc preGeneratedJs.js
 preGeneratedJs.js:
 	mkdir -p library
 	cp -r $(BUILDDIR)/lib/tcl8* library/
-	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl.data --preload library@/usr/lib/ | tail -n +5 > bla.js
-	cat js/preJs.js bla.js > preGeneratedJs.js
-	rm -f bla.js
+	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-library.data --preload library@/usr/lib/ | tail -n +5 > library.js
+	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-custom.data --preload custom@/usr/lib/ | tail -n +5 > custom.js
+	cat js/preJs.js library.js custom.js > preGeneratedJs.js
+	rm -f {library,custom}.js
 
 wasmtcl.bc:
 	cd tcl/unix && emmake make && make install
@@ -55,14 +56,15 @@ config:
 	cd tcl/unix && sed -i 's/^\(CFLAGS\t.*\)/\1 $(BCFLAGS)/g' Makefile
 
 install:
-	cp wasmtcl.{data,js,wasm} www/
+	cp wasmtcl.{js,wasm} www/
+	cp wasmtcl-{library,custom}.data www/
 
 clean:
-	rm -rf library wasmtcl.js* wasmtcl.data preGeneratedJs.js $(BUILDDIR) 
+	rm -rf library wasmtcl.js* *.data *.wasm *.js $(BUILDDIR) 
 	cd tcl/unix && make clean
 
 distclean:
-	rm -rf library wasmtcl.js* wasmtcl.data preGeneratedJs.js $(BUILDDIR)
+	rm -rf library wasmtcl.js* *.data *wasm *.js $(BUILDDIR)
 	cd tcl/unix && make distclean
 
 patch:

@@ -15,13 +15,12 @@
     }
   }
   
-  
   var Module = {
+    preRun: [],
     noInitialRun: false,
     noExitRuntime: true,
     print: function(txt) { console.log('wasmtcl stdout: ' + txt); },
     printErr: function(txt) { console.error('wasmtcl stderr: ' + txt); },
-    preRun: [],
     postRun: function () {
       _getInterp = Module.cwrap('Wasmtcl_GetInterp', 'number', []);
       _eval = Module.cwrap('Tcl_Eval', 'number', ['number', 'string']);
@@ -72,5 +71,5 @@
       };
 
       _OnReadyCb(_Result);
-    }
+    },
   };
