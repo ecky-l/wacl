@@ -5,8 +5,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
   <link rel="stylesheet" href="stylesheet.css" media="screen">
+  <!--
   <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
-  <script type="text/javascript" src="wasmtcl.js"></script>
+  <script type="text/javascript" src="wasmtcl/wasmtcl.js"></script>
+  -->
+  <script data-main="js/main" src="js/require.js"></script>
   <title>wasmTcl: Tcl in WebAssembly</title>
   <meta name="description" content="Tcl compiled with emscripten">
 
@@ -53,6 +56,7 @@
           </div>
 
           <script>
+          require(['tcl/wasmtcl', 'jquery-3.2.0.min'], function(wasmTcl) {
             wasmTcl.onReady(function (interp) {
               'use strict';
               var $inbox = $('#tcl_in > textarea');
@@ -89,6 +93,7 @@
               });
               outln(interp.Eval('puts "Tcl version: [info patchlevel]"'));
             });
+          });
           </script>
         </article>
       </div>
