@@ -4,7 +4,7 @@ BUILDDIR=jsbuild
 
 # Optimisation to use for generating bc
 BCFLAGS?=-Oz -s WASM=1
-#BCFLAGS?=-O0 -g4
+#BCFLAGS?=-O0 -g4 -s WASM=1
 
 # post-js happens later to write cwrap code conditional on tcl distro
 WASMFLAGS=\
