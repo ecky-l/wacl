@@ -16,7 +16,7 @@ define('tcl/wasmtcl', function () {
     }
   }
   
-  var _currPath = location.href + require.toUrl('tcl/');
+  var _currPath = require.toUrl('tcl/');
   var _wasmbly = (function (url) {
     return new Promise(function(resolve, reject) {
       var wasmXHR = new XMLHttpRequest();
