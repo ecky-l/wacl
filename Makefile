@@ -60,15 +60,18 @@ install:
 	cp wasmtcl.{js,wasm} www/js/tcl/
 	cp wasmtcl-{library,custom}.data www/js/tcl/
 
+package: install
+	cd www && zip -r ../wasmtcl.zip *
+	
 uninstall:
 	rm -rf www/js/tcl/
 
 clean:
-	rm -rf library wasmtcl.js* *.data *.wasm *.js $(BUILDDIR) 
+	rm -rf library wasmtcl.js* *.data *.wasm *.js wasmtcl.zip $(BUILDDIR) 
 	cd tcl/unix && make clean
 
 distclean:
-	rm -rf library wasmtcl.js* *.data *wasm *.js $(BUILDDIR)
+	rm -rf library wasmtcl.js* *.data *wasm *.js wasmtcl.zip $(BUILDDIR)
 	cd tcl/unix && make distclean
 
 patch:
