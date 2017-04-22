@@ -1,0 +1,148 @@
+diff -ruN tDOM-0.8.3/generic/tcldom.c tdom/generic/tcldom.c
+--- tDOM-0.8.3/generic/tcldom.c	2007-12-26 00:19:02.000000000 +0100
++++ tdom/generic/tcldom.c	2017-04-22 14:13:41.818069977 +0200
+@@ -5934,7 +5934,7 @@
+     if (ret == TCL_ERROR) {
+         char msg[64 + TCL_INTEGER_SPACE];
+         sprintf(msg, "\n    (\"%s %s\" body line %d)", Tcl_GetString(objv[0]),
+-                Tcl_GetString(objv[1]), interp->errorLine);
++                Tcl_GetString(objv[1]), Tcl_GetErrorLine(interp));
+         Tcl_AddErrorInfo(interp, msg);
+     }
+ 
+diff -ruN tDOM-0.8.3/generic/tclexpat.c tdom/generic/tclexpat.c
+--- tDOM-0.8.3/generic/tclexpat.c	2008-03-04 21:34:28.000000000 +0100
++++ tdom/generic/tclexpat.c	2017-04-22 15:06:21.872603874 +0200
+@@ -38,7 +38,7 @@
+ #include <string.h>
+ #include <dom.h>
+ #include <tclexpat.h>
+-#include <fcntl.h>
++#include <stdio.h>
+ 
+ #ifdef _MSC_VER
+ #include <io.h>
+@@ -826,7 +826,7 @@
+   int result, mode, done;
+   size_t bytesread;
+   char s[255], buf[8*1024];
+-  int fd;
++  FILE *fd;
+   XML_Parser  parser;
+   Tcl_Channel channel = NULL;
+   CHandlerSet *activeCHandlerSet;
+@@ -947,8 +947,8 @@
+       break;
+ 
+   case EXPAT_INPUT_FILENAME:
+-      fd = open(data, O_BINARY|O_RDONLY);
+-      if (fd < 0) {
++      fd = fopen(data, "rb");
++      if (fd == NULL) {
+           Tcl_ResetResult (interp);
+           Tcl_AppendResult (interp, "error opening file \"",
+                             data, "\"", (char *) NULL);
+@@ -960,15 +960,15 @@
+           int nread;
+           char *fbuf = XML_GetBuffer (parser, READ_SIZE);
+           if (!fbuf) {
+-              close (fd);
++              fclose (fd);
+               Tcl_ResetResult (interp);
+               Tcl_SetResult (interp, "Out of memory\n", NULL);
+               expat->parsingState = 1;
+               return TCL_ERROR;
+           }
+-          nread = read(fd, fbuf, READ_SIZE);
+-          if (nread < 0) {
+-              close (fd);
++          nread = fread(fbuf, 1, READ_SIZE, fd);
++          if (nread < READ_SIZE && ferror(fd)) {
++              fclose (fd);
+               Tcl_ResetResult (interp);
+               Tcl_AppendResult (interp, "error reading from file \"",
+                                 data, "\"", (char *) NULL);
+@@ -976,12 +976,12 @@
+               return TCL_ERROR;
+           }
+           if (!XML_ParseBuffer (parser, nread, nread == 0)) {
+-              close (fd);
++              fclose (fd);
+               result = 0;
+               break;
+           }
+           if (nread == 0) {
+-              close(fd);
++              fclose(fd);
+               break;
+           }
+       }
+@@ -3219,7 +3219,8 @@
+ {
+   TclGenExpatInfo *expat = (TclGenExpatInfo *) XML_GetUserData(parser);
+   Tcl_Obj *cmdPtr, *resultObj, *resultTypeObj, *extbaseObj, *dataObj;
+-  int result, mode, done, fd, tclLen;
++  int result, mode, done, /*fd,*/ tclLen;
++  FILE *fd;
+   size_t len;
+   TclHandlerSet *activeTclHandlerSet;
+   CHandlerSet *activeCHandlerSet;
+@@ -3402,8 +3403,8 @@
+           break;
+ 
+       case EXPAT_INPUT_FILENAME:
+-          fd = open(dataStr, O_BINARY|O_RDONLY);
+-          if (fd < 0) {
++          fd = fopen(dataStr, "rb");
++          if (fd == NULL) {
+               Tcl_ResetResult (expat->interp);
+               Tcl_AppendResult (expat->interp, "error opening file \"",
+                                 dataStr, "\"", (char *) NULL);
+@@ -3419,16 +3420,16 @@
+               int nread;
+               char *fbuf = XML_GetBuffer (extparser, READ_SIZE);
+               if (!fbuf) {
+-                  close (fd);
++                  fclose (fd);
+                   Tcl_ResetResult (expat->interp);
+                   Tcl_SetResult (expat->interp, "Out of memory\n", NULL);
+                   TclExpatHandlerResult (expat, activeTclHandlerSet,
+                                          ERROR_IN_EXTREFHANDLER);
+                   return 0;
+               }
+-              nread = read(fd, fbuf, READ_SIZE);
+-              if (nread < 0) {
+-                  close (fd);
++              nread = fread(fbuf, 1, READ_SIZE, fd);
++              if (nread < READ_SIZE && ferror(fd)) {
++                  fclose (fd);
+                   Tcl_ResetResult (expat->interp);
+                   Tcl_AppendResult (expat->interp,
+                                     "error reading from file \"",
+@@ -3438,12 +3439,12 @@
+                   return 0;
+               }
+               if (!XML_ParseBuffer (extparser, nread, nread == 0)) {
+-                  close (fd);
++                  fclose (fd);
+                   result = 0;
+                   break;
+               }
+               if (nread == 0) {
+-                  close(fd);
++                  fclose(fd);
+                   break;
+               }
+           }
+diff -ruN tDOM-0.8.3/Makefile.in tdom/Makefile.in
+--- tDOM-0.8.3/Makefile.in	2007-03-03 00:43:53.000000000 +0100
++++ tdom/Makefile.in	2017-04-22 15:05:00.461500548 +0200
+@@ -365,7 +365,7 @@
+ 
+ clean:  
+ 	-test -z "$(BINARIES)" || rm -f $(BINARIES)
+-	-rm -f *.$(OBJEXT) core *.core
++	-rm -f *.$(OBJEXT) core *.core a.out.js
+ 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
+ 
+ distclean: clean
