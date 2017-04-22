@@ -35,8 +35,6 @@ all: wasmtcl.js
 
 wasmtcl.js: wasmtcl.bc extensions preGeneratedJs.js
 	emcc $(WASMFLAGS) $(WASMTCLEXPORTS) $(WASMLIBS) -o $@
-	#emcc $(WASMFLAGS) $(WASMTCLEXPORTS) $(INSTALLDIR)/lib/libtcl8.6.a \
-	#	$(INSTALLDIR)/lib/tdom0.8.3/libtdom0.8.3.a -o $@
 
 preGeneratedJs.js:
 	mkdir -p library
