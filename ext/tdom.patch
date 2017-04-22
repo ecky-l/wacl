@@ -1,6 +1,18 @@
+diff -ruN tDOM-0.8.3/configure.in tdom/configure.in
+--- tDOM-0.8.3/configure.in	2007-08-15 23:40:12.000000000 +0200
++++ tdom/configure.in	2017-04-22 23:01:58.315493199 +0200
+@@ -185,7 +185,7 @@
+ # link against the non-stubbed Tcl library.  Add Tk too if necessary.
+ #--------------------------------------------------------------------
+ 
+-AC_DEFINE(USE_TCL_STUBS)
++#AC_DEFINE(USE_TCL_STUBS)
+ #AC_DEFINE(USE_TK_STUBS)
+ 
+ #--------------------------------------------------------------------
 diff -ruN tDOM-0.8.3/generic/tcldom.c tdom/generic/tcldom.c
 --- tDOM-0.8.3/generic/tcldom.c	2007-12-26 00:19:02.000000000 +0100
-+++ tdom/generic/tcldom.c	2017-04-22 14:13:41.818069977 +0200
++++ tdom/generic/tcldom.c	2017-04-22 22:08:22.253617589 +0200
 @@ -5934,7 +5934,7 @@
      if (ret == TCL_ERROR) {
          char msg[64 + TCL_INTEGER_SPACE];
@@ -12,7 +24,7 @@ diff -ruN tDOM-0.8.3/generic/tcldom.c tdom/generic/tcldom.c
  
 diff -ruN tDOM-0.8.3/generic/tclexpat.c tdom/generic/tclexpat.c
 --- tDOM-0.8.3/generic/tclexpat.c	2008-03-04 21:34:28.000000000 +0100
-+++ tdom/generic/tclexpat.c	2017-04-22 15:06:21.872603874 +0200
++++ tdom/generic/tclexpat.c	2017-04-22 23:28:10.211359350 +0200
 @@ -38,7 +38,7 @@
  #include <string.h>
  #include <dom.h>
@@ -82,7 +94,7 @@ diff -ruN tDOM-0.8.3/generic/tclexpat.c tdom/generic/tclexpat.c
    TclGenExpatInfo *expat = (TclGenExpatInfo *) XML_GetUserData(parser);
    Tcl_Obj *cmdPtr, *resultObj, *resultTypeObj, *extbaseObj, *dataObj;
 -  int result, mode, done, fd, tclLen;
-+  int result, mode, done, /*fd,*/ tclLen;
++  int result, mode, done, tclLen;
 +  FILE *fd;
    size_t len;
    TclHandlerSet *activeTclHandlerSet;
@@ -134,15 +146,59 @@ diff -ruN tDOM-0.8.3/generic/tclexpat.c tdom/generic/tclexpat.c
                    break;
                }
            }
+diff -ruN tDOM-0.8.3/generic/tdominit.c tdom/generic/tdominit.c
+--- tDOM-0.8.3/generic/tdominit.c	2005-08-26 00:59:49.000000000 +0200
++++ tdom/generic/tdominit.c	2017-04-22 23:16:23.217305388 +0200
+@@ -65,6 +65,7 @@
+ Tdom_Init (interp)
+      Tcl_Interp *interp; /* Interpreter to initialize. */
+ {
++    Tcl_Namespace *tdomNs, *tdomXmlNs;
+ 
+ #ifdef USE_TCL_STUBS
+     Tcl_InitStubs(interp, "8", 0);
+@@ -81,16 +82,26 @@
+     Tcl_CreateObjCommand(interp, "unknown", tcldom_unknownCmd,  NULL, NULL );
+ #endif
+ 
+-    Tcl_CreateObjCommand(interp, "dom",     tcldom_DomObjCmd,   NULL, NULL );
+-    Tcl_CreateObjCommand(interp, "domDoc",  tcldom_DocObjCmd,   NULL, NULL );
+-    Tcl_CreateObjCommand(interp, "domNode", tcldom_NodeObjCmd,  NULL, NULL );
+-    Tcl_CreateObjCommand(interp, "tdom",    TclTdomObjCmd,      NULL, NULL );
++    /* commands initialization */
++    tdomNs = Tcl_CreateNamespace(interp, "::tdom", NULL, NULL);
++    tdomXmlNs = Tcl_CreateNamespace(interp, "::tdom::xml", NULL, NULL);
++    
++    Tcl_CreateObjCommand(interp, "::tdom::dom",     tcldom_DomObjCmd,   NULL, NULL );
++    Tcl_CreateObjCommand(interp, "::tdom::domDoc",  tcldom_DocObjCmd,   NULL, NULL );
++    Tcl_CreateObjCommand(interp, "::tdom::domNode", tcldom_NodeObjCmd,  NULL, NULL );
++    Tcl_CreateObjCommand(interp, "::tdom::tdom",    TclTdomObjCmd,      NULL, NULL );
+ 
+ #ifndef TDOM_NO_EXPAT    
+-    Tcl_CreateObjCommand(interp, "expat",       TclExpatObjCmd, NULL, NULL );
+-    Tcl_CreateObjCommand(interp, "xml::parser", TclExpatObjCmd, NULL, NULL );
++    Tcl_CreateObjCommand(interp, "::tdom::expat",       TclExpatObjCmd, NULL, NULL );
++    Tcl_CreateObjCommand(interp, "::tdom::xml::parser", TclExpatObjCmd, NULL, NULL );
+ #endif
+     
++    Tcl_Export(interp, tdomNs, "dom", 0);
++    Tcl_Export(interp, tdomNs, "domDoc", 0);
++    Tcl_Export(interp, tdomNs, "domNode", 0);
++    Tcl_Export(interp, tdomNs, "tdom", 0);
++    Tcl_Export(interp, tdomNs, "expat", 0);
++    
+ #ifdef USE_TCL_STUBS
+     Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION, 
+                      (ClientData) &tdomStubs);
 diff -ruN tDOM-0.8.3/Makefile.in tdom/Makefile.in
 --- tDOM-0.8.3/Makefile.in	2007-03-03 00:43:53.000000000 +0100
-+++ tdom/Makefile.in	2017-04-22 15:05:00.461500548 +0200
++++ tdom/Makefile.in	2017-04-22 22:39:12.245491170 +0200
 @@ -365,7 +365,7 @@
  
  clean:  
  	-test -z "$(BINARIES)" || rm -f $(BINARIES)
 -	-rm -f *.$(OBJEXT) core *.core
-+	-rm -f *.$(OBJEXT) core *.core a.out.js
++	-rm -f *.$(OBJEXT) core *.core a.out*
  	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
  
  distclean: clean

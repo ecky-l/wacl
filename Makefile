@@ -1,10 +1,16 @@
 # Tcl version. Relies on tcl-core$(TCLVERSION) being vailable at sourceforge
 TCLVERSION?=8.6.6
-BUILDDIR=jsbuild
+TDOMVERSION?=0.8.3
+
+INSTALLDIR=jsbuild
+
+WASMLIBS=$(INSTALLDIR)/lib/libtcl8.6.a \
+	   $(INSTALLDIR)/lib/tdom$(TDOMVERSION)/libtdom$(TDOMVERSION).a
 
 # Optimisation to use for generating bc
 BCFLAGS?=-Oz -s WASM=1
 #BCFLAGS?=-O0 -g4 -s WASM=1
+
 
 # post-js happens later to write cwrap code conditional on tcl distro
 WASMFLAGS=\
@@ -22,21 +28,26 @@ WASMTCLEXPORTS=\
 		'_Tcl_GetStringResult',\
 	]"
 
-.PHONY: all library clean distclean tclprep reset install uninstall
+.PHONY: all wasmtcl.bc extensions clean distclean tclprep reset install uninstall
 
 
-all: wasmtcl.bc library wasmtcl.js
+all: wasmtcl.js
 
-wasmtcl.js: wasmtcl.bc preGeneratedJs.js
-	emcc $(WASMFLAGS) $(WASMTCLEXPORTS) $(BUILDDIR)/lib/libtcl8.6.a -o $@
+wasmtcl.js: wasmtcl.bc extensions preGeneratedJs.js
+	emcc $(WASMFLAGS) $(WASMTCLEXPORTS) $(WASMLIBS) -o $@
+	#emcc $(WASMFLAGS) $(WASMTCLEXPORTS) $(INSTALLDIR)/lib/libtcl8.6.a \
+	#	$(INSTALLDIR)/lib/tdom0.8.3/libtdom0.8.3.a -o $@
 
 preGeneratedJs.js:
 	mkdir -p library
-	cp -r $(BUILDDIR)/lib/tcl8* library/
+	cp -r $(INSTALLDIR)/lib/tcl8* library/
 	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-library.data --preload library@/usr/lib/ | tail -n +5 > library.js
 	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-custom.data --preload custom@/usr/lib/ | tail -n +5 > custom.js
 	cat js/preJsRequire.js library.js custom.js > preGeneratedJs.js
 	rm -f {library,custom}.js
+
+extensions:
+	cd ext && if [ ! -e tdom/Makefile ] ; then make tdomconfig ; fi && make tdominstall
 
 wasmtcl.bc:
 	cd tcl/unix && emmake make && make install
@@ -47,10 +58,11 @@ tclprep:
 	tar -C tcl --strip-components=1 -xf tcl-core$(TCLVERSION)-src.tar.gz
 	cd tcl && patch --verbose -p1 < ../wasmtcl.patch
 	cd tcl/unix && autoconf
+	cd ext && make tdomprep
 
 config:
-	mkdir -p $(BUILDDIR)
-	cd tcl/unix && emconfigure ./configure --prefix=$(CURDIR)/$(BUILDDIR) \
+	mkdir -p $(INSTALLDIR)
+	cd tcl/unix && emconfigure ./configure --prefix=$(CURDIR)/$(INSTALLDIR) \
 		--disable-threads --disable-load --disable-shared
 	cd tcl/unix && sed -i 's/-O2//g' Makefile
 	cd tcl/unix && sed -i 's/^\(CFLAGS\t.*\)/\1 $(BCFLAGS)/g' Makefile
@@ -67,12 +79,14 @@ uninstall:
 	rm -rf www/js/tcl/
 
 clean:
-	rm -rf library wasmtcl.js* *.data *.wasm *.js wasmtcl.zip $(BUILDDIR) 
+	rm -rf library wasmtcl.js* *.data *.wasm *.js wasmtcl.zip $(INSTALLDIR) 
 	cd tcl/unix && make clean
+	cd ext && make tdomclean
 
 distclean:
-	rm -rf library wasmtcl.js* *.data *wasm *.js wasmtcl.zip $(BUILDDIR)
+	rm -rf library wasmtcl.js* *.data *wasm *.js wasmtcl.zip $(INSTALLDIR)
 	cd tcl/unix && make distclean
+	cd ext && make tdomdistclean
 
 patch:
 	wget -nc http://prdownloads.sourceforge.net/tcl/tcl-core$(TCLVERSION)-src.tar.gz
@@ -83,5 +97,5 @@ patch:
 
 reset:
 	@read -p "This nukes anything in ./tcl/, are you sure? Type 'YES I am sure' if so: " P && [ "$$P" = "YES I am sure" ]
-	rm -rf tcl $(BUILDDIR) wasmtcl.js* preGeneratedJs.js
+	rm -rf tcl $(INSTALLDIR) wasmtcl.js* preGeneratedJs.js
 

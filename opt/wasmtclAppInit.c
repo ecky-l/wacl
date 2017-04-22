@@ -2,6 +2,9 @@
 #include <emscripten.h>
 #include "wasmtcl.h"
 
+EXTERN int Tdom_Init     _ANSI_ARGS_((Tcl_Interp *interp));
+EXTERN int Tdom_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
+
 /*
  * The main interpreter, 
  * initialized at startup and returned by Wasmtcl_GetMainInterp
@@ -14,6 +17,10 @@ Wasmtcl_AppInit(Tcl_Interp* interp)
     if (Wasmtcl_Init(interp) != TCL_OK)
     {
         printf("Error while initialize Wasmtcl! Package will not be present");
+    }
+    if (Tdom_Init(interp) != TCL_OK)
+    {
+        printf("Error while initialize tDOM! Package will not be present");
     }
     return 0;
 }

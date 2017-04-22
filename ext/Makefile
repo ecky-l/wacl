@@ -18,12 +18,17 @@ tdomprep:
 	mkdir -p tdom
 	tar -C tdom --strip-components=1 -xf tDOM-$(TDOMVERSION).tgz
 	cd tdom && patch --verbose -p1 < ../tdom.patch
+	cd tdom && autoconf
 
 tdompatch:
 	wget -nc https://github.com/downloads/tDOM/tdom/tDOM-$(TDOMVERSION).tgz
 	tar -xzf tDOM-$(TDOMVERSION).tgz
+	rm -rf tdom/{autom4te.cache,configure} tDOM-$(TDOMVERSION)/configure 
 	echo `diff -ruN tDOM-$(TDOMVERSION) tdom > tdom.patch`
 	rm -rf tDOM-$(TDOMVERSION)
+
+tdominstall: tdom
+	cd tdom && make install
 
 tdomclean:
 	cd tdom && make clean
