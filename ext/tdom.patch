@@ -483,7 +483,7 @@ diff -ruN tDOM-0.8.3/generic/nodecmd.c tdom/generic/nodecmd.c
      nodeInfo->type = type;
 diff -ruN tDOM-0.8.3/generic/tcldom.c tdom/generic/tcldom.c
 --- tDOM-0.8.3/generic/tcldom.c	2007-12-26 00:19:02.000000000 +0100
-+++ tdom/generic/tcldom.c	2017-04-23 17:48:03.746679308 +0200
++++ tdom/generic/tcldom.c	2017-04-23 18:07:09.200401850 +0200
 @@ -2538,21 +2538,62 @@
      empty = 0;
      scriptTag = 0;
@@ -514,7 +514,7 @@ diff -ruN tDOM-0.8.3/generic/tcldom.c tdom/generic/tcldom.c
 +                    !strcmp(tag,"basefont")) {
 +                empty = 1;
 +            }
-+            // EL break;?
++            break;
 +        }
 +        case 'c': {
 +            if (!strcmp(tag,"col"))
