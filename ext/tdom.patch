@@ -1,6 +1,6 @@
 diff -ruN tDOM-0.8.3/configure.in tdom/configure.in
 --- tDOM-0.8.3/configure.in	2007-08-15 23:40:12.000000000 +0200
-+++ tdom/configure.in	2017-04-22 23:01:58.315493199 +0200
++++ tdom/configure.in	2017-04-22 23:31:08.427314835 +0200
 @@ -185,7 +185,7 @@
  # link against the non-stubbed Tcl library.  Add Tk too if necessary.
  #--------------------------------------------------------------------
@@ -10,10 +10,559 @@ diff -ruN tDOM-0.8.3/configure.in tdom/configure.in
  #AC_DEFINE(USE_TK_STUBS)
  
  #--------------------------------------------------------------------
+diff -ruN tDOM-0.8.3/expat/xmlparse.c tdom/expat/xmlparse.c
+--- tDOM-0.8.3/expat/xmlparse.c	2007-07-31 02:16:28.000000000 +0200
++++ tdom/expat/xmlparse.c	2017-04-23 17:47:15.088602663 +0200
+@@ -1499,6 +1499,9 @@
+           ps_parsing = XML_FINISHED;
+           return result;
+         }
++      case XML_FINISHED:
++      default:
++        break;
+       }
+     }
+ 
+diff -ruN tDOM-0.8.3/generic/dom.c tdom/generic/dom.c
+--- tDOM-0.8.3/generic/dom.c	2007-12-26 00:18:41.000000000 +0100
++++ tdom/generic/dom.c	2017-04-23 17:44:11.550857537 +0200
+@@ -486,7 +486,7 @@
+     domNode *other
+     )
+ {
+-    domNode *nodeAncestor, *otherAncestor, *otherToplevel;
++    domNode *nodeAncestor, *otherAncestor;
+     domAttrNode *attrN, *attrO;
+     
+     if (node == other) {
+@@ -556,7 +556,6 @@
+             return 1;
+         }
+     }
+-    otherToplevel = otherAncestor;
+     
+     nodeAncestor = node;
+     while (nodeAncestor->parentNode) {
+@@ -4960,12 +4959,11 @@
+ {
+     domNode     *ancestor;
+     domAttrNode *attr;
+-    int          found=0, result;
++    int          result;
+ 
+ 
+     ancestor = node->parentNode;
+     if (ancestor) {
+-        found = 0;
+         if ((type == ALL_NODES) || (ancestor->nodeType == type)) {
+             if ((element == NULL) ||
+                 ((ancestor->nodeType == ELEMENT_NODE) && (strcmp(ancestor->nodeName,element)==0))
+@@ -4977,7 +4975,6 @@
+                         if (result) {
+                             return result;
+                         }
+-                        found = 1;
+                     }
+                 } else {
+                     attr = ancestor->firstAttr;
+@@ -4995,7 +4992,6 @@
+                                 if (result) {
+                                     return result;
+                                 }
+-                                found = 1;
+                             }
+                         }
+                         attr = attr->nextSibling;
+@@ -5159,7 +5155,7 @@
+      int objc;
+      Tcl_Obj *CONST objv[];
+ {
+-    char            *method, *encodingName;
++    char            *encodingName;
+     CHandlerSet     *handlerSet;
+     int              methodIndex, result, bool;
+     tdomCmdReadInfo *info;
+@@ -5191,7 +5187,6 @@
+         return TCL_ERROR;
+     }
+ 
+-    method = Tcl_GetString(objv[2]);
+     if (Tcl_GetIndexFromObj (interp, objv[2], tdomMethods, "method", 0,
+                              &methodIndex) != TCL_OK)
+     {
+diff -ruN tDOM-0.8.3/generic/domhtml.c tdom/generic/domhtml.c
+--- tDOM-0.8.3/generic/domhtml.c	2008-03-04 21:52:47.000000000 +0100
++++ tdom/generic/domhtml.c	2017-04-23 17:45:12.847434608 +0200
+@@ -876,31 +876,85 @@
+                         \--------------------------------------------------------------*/
+                         autoclose = 0;
+                         switch (pn[0]) {
+-                            case 'a': if (!strcmp(pn,"a"))        autoclose = 1; break;
+-                            case 'b': if (!strcmp(pn,"b"))        autoclose = 1; break;
+-                            case 'c': if (!strcmp(pn,"colgroup")) autoclose = 1; break;
+-                            case 'd': if (!strcmp(pn,"dd") ||
+-                                          !strcmp(pn,"dt") ||
+-                                          (!strcmp(start+2,"form") && !strcmp(pn,"div"))
+-                                         )                        autoclose = 1; break;
+-                            case 'h': if (!strcmp(pn,"head") ||
+-                                          !strcmp(pn,"html"))     autoclose = 1; break;
+-                            case 'f': if (!strcmp(pn,"font")||
+-                                          !strcmp(pn,"form"))     autoclose = 1; break;
+-                            case 'i': if (!strcmp(pn,"i"))        autoclose = 1; break;
+-                            case 'l': if (!strcmp(pn,"li"))       autoclose = 1; break;
+-                            case 'n': if (!strcmp(pn,"noscript")) autoclose = 1; break;
+-                            case 'o': if (!strcmp(pn,"option"))   autoclose = 1; break;
+-                            case 'p': if (!strcmp(pn,"p"))        autoclose = 1; break;
+-                            case 's': if (!strcmp(pn,"span"))     autoclose = 1; break;
+-                            case 't': if (!strcmp(pn,"tbody") ||
++                            case 'a': {
++                                if (!strcmp(pn,"a"))
++                                    autoclose = 1; 
++                                break;
++                            }
++                            case 'b': {
++                                if (!strcmp(pn,"b"))
++                                    autoclose = 1; 
++                                break;
++                            }
++                            case 'c': {
++                                if (!strcmp(pn,"colgroup"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 'd': {
++                                if (!strcmp(pn,"dd") || !strcmp(pn,"dt") || 
++                                    (!strcmp(start+2,"form") && !strcmp(pn,"div"))) {
++                                   autoclose = 1;
++                                }
++                                break;
++                            }
++                            case 'h': {
++                                if (!strcmp(pn,"head") || !strcmp(pn,"html"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 'f': {
++                                if (!strcmp(pn,"font")|| !strcmp(pn,"form"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 'i': {
++                                if (!strcmp(pn,"i"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 'l': {
++                                if (!strcmp(pn,"li"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 'n': {
++                                if (!strcmp(pn,"noscript"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 'o': {
++                                if (!strcmp(pn,"option"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 'p': {
++                                if (!strcmp(pn,"p"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 's': {
++                                if (!strcmp(pn,"span"))
++                                    autoclose = 1;
++                                break;
++                            }
++                            case 't': {
++                                if (!strcmp(pn,"tbody") ||
+                                           !strcmp(pn,"td")    ||
+                                           !strcmp(pn,"tfoot") ||
+                                           !strcmp(pn,"thead") ||
+                                           !strcmp(pn,"th")    ||
+                                           !strcmp(pn,"tr")    ||
+-                                          !strcmp(pn,"tt"))       autoclose = 1; break;
+-                            case 'u': if (!strcmp(pn,"ul"))       autoclose = 1; break; /* ext */
++                                          !strcmp(pn,"tt")) {
++                                    autoclose = 1;
++                                }
++                                break;
++                            }
++                            case 'u': {
++                                if (!strcmp(pn,"ul"))
++                                    autoclose = 1;
++                                break; /* ext */
++                            }
+                         }
+                         /*---------------------------------------------------------------
+                         |   check for tags for close inner tags
+@@ -1351,21 +1405,67 @@
+             |   check for empty HTML tags
+             \----------------------------------------------------------*/
+             switch (node->nodeName[0]) {
+-                case 'a':  if (!strcmp(node->nodeName,"area"))     hasContent = 0; break;
+-                case 'b':  if (!strcmp(node->nodeName,"br")     ||
+-                               !strcmp(node->nodeName,"base")   ||
+-                               !strcmp(node->nodeName,"basefont")) hasContent = 0; break;
+-                case 'c':  if (!strcmp(node->nodeName,"col"))      hasContent = 0; break;
+-                case 'e':  if (!strcmp(node->nodeName,"embed"))    hasContent = 0; break; /*ext*/
+-                case 'f':  if (!strcmp(node->nodeName,"frame"))    hasContent = 0; break;
+-                case 'h':  if (!strcmp(node->nodeName,"hr"))       hasContent = 0; break;
+-                case 'i':  if (!strcmp(node->nodeName,"img")   ||
+-                               !strcmp(node->nodeName,"input") ||
+-                               !strcmp(node->nodeName,"isindex"))  hasContent = 0; break;
+-                case 'l':  if (!strcmp(node->nodeName,"link"))     hasContent = 0; break;
+-                case 'm':  if (!strcmp(node->nodeName,"meta"))     hasContent = 0; break;
+-                case 'p':  if (!strcmp(node->nodeName,"param"))    hasContent = 0; break;
+-                case 's':  if (!strcmp(node->nodeName,"spacer"))   hasContent = 0; break; /*ext*/
++                case 'a': {
++                    if (!strcmp(node->nodeName,"area"))
++                        hasContent = 0;
++                    break;
++                }
++                case 'b': {
++                    if (!strcmp(node->nodeName,"br") || 
++                            !strcmp(node->nodeName,"base") ||
++                            !strcmp(node->nodeName,"basefont")) {
++                        hasContent = 0;
++                    }
++                    break;
++                }
++                case 'c': {
++                    if (!strcmp(node->nodeName,"col"))
++                        hasContent = 0;
++                    break;
++                }
++                case 'e': {
++                    if (!strcmp(node->nodeName,"embed"))
++                        hasContent = 0;
++                    break; /*ext*/
++                }
++                case 'f': {
++                    if (!strcmp(node->nodeName,"frame"))
++                        hasContent = 0;
++                    break;
++                }
++                case 'h': {
++                    if (!strcmp(node->nodeName,"hr"))
++                        hasContent = 0;
++                    break;
++                }
++                case 'i': {
++                    if (!strcmp(node->nodeName,"img") ||
++                            !strcmp(node->nodeName,"input") ||
++                            !strcmp(node->nodeName,"isindex")) {
++                        hasContent = 0;
++                    }
++                    break;
++                }
++                case 'l': {
++                    if (!strcmp(node->nodeName,"link"))
++                        hasContent = 0;
++                    break;
++                }
++                case 'm': {
++                    if (!strcmp(node->nodeName,"meta"))
++                        hasContent = 0;
++                    break;
++                }
++                case 'p': {
++                    if (!strcmp(node->nodeName,"param"))
++                        hasContent = 0;
++                    break;
++                }
++                case 's': {
++                    if (!strcmp(node->nodeName,"spacer"))
++                        hasContent = 0;
++                    break; /*ext*/
++                }
+             }
+ 
+             if (*x=='/') {
+@@ -1452,22 +1552,57 @@
+         \--------------------------------------------------------------*/
+         autoclose = 0;
+         switch (pn[0]) {
+-            case 'b': if (!strcmp(pn,"body"))     autoclose = 1; break;
+-            case 'c': if (!strcmp(pn,"colgroup")) autoclose = 1; break;
+-            case 'd': if (!strcmp(pn,"dd") ||
+-                          !strcmp(pn,"dt"))       autoclose = 1; break;
+-            case 'h': if (!strcmp(pn,"head") ||
+-                          !strcmp(pn,"html"))     autoclose = 1; break;
+-            case 'l': if (!strcmp(pn,"li"))       autoclose = 1; break;
+-            case 'o': if (!strcmp(pn,"option"))   autoclose = 1; break;
+-            case 'p': if (!strcmp(pn,"p"))        autoclose = 1; break;
+-            case 't': if (!strcmp(pn,"tbody") ||
+-                          !strcmp(pn,"td")    ||
+-                          !strcmp(pn,"tfoot") ||
+-                          !strcmp(pn,"thead") ||
+-                          !strcmp(pn,"th")    ||
+-                          !strcmp(pn,"tr"))       autoclose = 1; break;
+-            case 'u': if (!strcmp(pn,"ul"))       autoclose = 1; break; /* ext */
++            case 'b': {
++                if (!strcmp(pn,"body"))
++                    autoclose = 1;
++                break;
++            }
++            case 'c': {
++                if (!strcmp(pn,"colgroup"))
++                    autoclose = 1;
++                break;
++            }
++            case 'd': {
++                if (!strcmp(pn,"dd") || !strcmp(pn,"dt"))
++                    autoclose = 1;
++                break;
++            }
++            case 'h': {
++                if (!strcmp(pn,"head") || !strcmp(pn,"html"))
++                    autoclose = 1;
++                break;
++            }
++            case 'l': {
++                if (!strcmp(pn,"li"))
++                    autoclose = 1;
++                break;
++            }
++            case 'o': {
++                if (!strcmp(pn,"option"))
++                    autoclose = 1;
++                break;
++            }
++            case 'p': {
++                if (!strcmp(pn,"p"))
++                    autoclose = 1;
++                break;
++            }
++            case 't': {
++                if (!strcmp(pn,"tbody") ||
++                        !strcmp(pn,"td")    ||
++                        !strcmp(pn,"tfoot") ||
++                        !strcmp(pn,"thead") ||
++                        !strcmp(pn,"th")    ||
++                        !strcmp(pn,"tr")) {
++                    autoclose = 1;
++                }
++                break;
++            }
++            case 'u': {
++                if (!strcmp(pn,"ul"))
++                    autoclose = 1;
++                break; /* ext */
++            }
+         }
+         if (!autoclose) break;
+         DBG(fprintf(stderr, "final autoclosed '%s'! \n", pn);)
+diff -ruN tDOM-0.8.3/generic/domxpath.c tdom/generic/domxpath.c
+--- tDOM-0.8.3/generic/domxpath.c	2007-08-23 18:33:36.000000000 +0200
++++ tdom/generic/domxpath.c	2017-04-23 17:45:53.539826120 +0200
+@@ -2853,7 +2853,7 @@
+     xpathResultSets *args;
+     xpathResultSet  *arg;
+     Tcl_HashEntry   *entryPtr;
+-    int              left = 0, useFastAdd;
++    int              left = 0;
+     double           dRight = 0.0;
+     char            *leftStr = NULL, *rightStr = NULL;
+     const char      *str;
+@@ -2868,10 +2868,6 @@
+     Tcl_UniChar     *ufStr, *upfrom, unichar;
+ #endif
+ 
+-    if (result->type == EmptyResult) useFastAdd = 1;
+-    else useFastAdd = 0;
+-
+-
+     switch (step->intvalue) {
+ 
+     case f_position:
+diff -ruN tDOM-0.8.3/generic/domxslt.c tdom/generic/domxslt.c
+--- tDOM-0.8.3/generic/domxslt.c	2008-03-04 22:03:09.000000000 +0100
++++ tdom/generic/domxslt.c	2017-04-23 17:57:22.695585194 +0200
+@@ -465,6 +465,7 @@
+ |   printXML
+ |
+ \---------------------------------------------------------------------------*/
++/*
+ static void printXML (domNode *node, int level, int maxlevel) {
+ 
+     domTextNode *tnode;
+@@ -534,7 +535,7 @@
+         if (n>8) { fprintf(stderr, "...\n"); return; }
+     }
+ }
+-        
++*/   
+ /*----------------------------------------------------------------------------
+ |   reportError
+ |
+@@ -1886,7 +1887,7 @@
+             node = (domNode*) node->firstAttr;
+             continue;
+         }
+-        if ((node->nodeType == ATTRIBUTE_NODE)) {
++        if (node->nodeType == ATTRIBUTE_NODE) {
+             if (((domAttrNode*)node)->nextSibling) {
+                 node = (domNode*) ((domAttrNode*)node)->nextSibling;
+                 continue;
+@@ -3470,7 +3471,7 @@
+ )
+ {
+     domNode       *child;
+-    char          *str, *evStr, *select, *lang;
++    char          *str, *evStr, *select /*, *lang */;
+     char         **vs = NULL;
+     char           prefix[MAX_PREFIX_LEN];
+     const char    *localName;
+@@ -3549,9 +3550,9 @@
+                     }
+                     FREE(evStr);
+                 }
+-                /* jcl: TODO */
+-                lang = getAttr(child, "lang", a_lang);
+-
++                /* jcl: TODO
++                 * lang = getAttr(child, "lang", a_lang);
++                 */
+                 TRACE4("sorting with '%s' typeText %d ascending %d nodeSetLen=%d\n",
+                        select, typeText, ascending, nodelist->nr_nodes);
+                 CHECK_RC;
+@@ -5613,7 +5614,6 @@
+     char *pc, *start, save, prefix[MAX_PREFIX_LEN];
+     const char *localName;
+     int hnew;
+-    Tcl_HashEntry *h;
+ 
+     Tcl_DString dStr;
+     domNS  *ns;
+@@ -5662,7 +5662,7 @@
+             return 0;
+         }
+         Tcl_DStringAppend (&dStr, localName, -1);
+-        h = Tcl_CreateHashEntry (HashTable, Tcl_DStringValue (&dStr), &hnew);
++        Tcl_CreateHashEntry (HashTable, Tcl_DStringValue (&dStr), &hnew);
+         Tcl_DStringSetLength (&dStr, 0);
+         *pc = save;
+     }
+@@ -7007,15 +7007,13 @@
+     }
+     Tcl_DeleteHashTable(&xs->formats);
+ 
+-    if (&xs->topLevelVars) {
+-        for (entryPtr = Tcl_FirstHashEntry(&xs->topLevelVars, &search);
+-             entryPtr != (Tcl_HashEntry*) NULL;
+-             entryPtr = Tcl_NextHashEntry(&search)) {
+-            tlv = (xsltTopLevelVar *) Tcl_GetHashValue (entryPtr);
+-            FREE(tlv);
+-        }
+-        Tcl_DeleteHashTable (&xs->topLevelVars);
++    for (entryPtr = Tcl_FirstHashEntry(&xs->topLevelVars, &search);
++         entryPtr != (Tcl_HashEntry*) NULL;
++         entryPtr = Tcl_NextHashEntry(&search)) {
++         tlv = (xsltTopLevelVar *) Tcl_GetHashValue (entryPtr);
++         FREE(tlv);
+     }
++    Tcl_DeleteHashTable (&xs->topLevelVars);
+ 
+     /*--- free key definition information ---*/
+     for (entryPtr = Tcl_FirstHashEntry (&xs->keyInfos, &search);
+diff -ruN tDOM-0.8.3/generic/nodecmd.c tdom/generic/nodecmd.c
+--- tDOM-0.8.3/generic/nodecmd.c	2005-03-26 15:08:06.000000000 +0100
++++ tdom/generic/nodecmd.c	2017-04-23 17:47:33.067891978 +0200
+@@ -620,6 +620,8 @@
+             type = PROCESSING_INSTRUCTION_NODE;
+         }
+         break;
++    default:
++        goto usage;
+     }
+     
+     nodeInfo->type = type;
 diff -ruN tDOM-0.8.3/generic/tcldom.c tdom/generic/tcldom.c
 --- tDOM-0.8.3/generic/tcldom.c	2007-12-26 00:19:02.000000000 +0100
-+++ tdom/generic/tcldom.c	2017-04-22 22:08:22.253617589 +0200
-@@ -5934,7 +5934,7 @@
++++ tdom/generic/tcldom.c	2017-04-23 17:48:03.746679308 +0200
+@@ -2538,21 +2538,62 @@
+     empty = 0;
+     scriptTag = 0;
+     switch (tag[0]) {
+-        case 'a':  if (!strcmp(tag,"area"))       empty = 1; break;
+-        case 'b':  if (!strcmp(tag,"br")     ||
+-                       !strcmp(tag,"base")   ||
+-                       !strcmp(tag,"basefont"))   empty = 1;
+-        case 'c':  if (!strcmp(tag,"col"))        empty = 1; break;
+-        case 'f':  if (!strcmp(tag,"frame"))      empty = 1; break;
+-        case 'h':  if (!strcmp(tag,"hr"))         empty = 1; break;
+-        case 'i':  if (!strcmp(tag,"img")    ||
+-                       !strcmp(tag,"input")  ||
+-                       !strcmp(tag,"isindex"))    empty = 1; break;
+-        case 'l':  if (!strcmp(tag,"link"))       empty = 1; break;
+-        case 'm':  if (!strcmp(tag,"meta"))       empty = 1; break;
+-        case 'p':  if (!strcmp(tag,"param"))      empty = 1; break;
+-        case 's':  if (!strcmp(tag,"script") ||     
+-                       !strcmp(tag,"style"))  scriptTag = 1; break;
++        case 'a': {
++            if (!strcmp(tag,"area"))
++                empty = 1;
++            break;
++        }
++        case 'b': {
++            if (!strcmp(tag,"br") ||
++                    !strcmp(tag,"base") ||
++                    !strcmp(tag,"basefont")) {
++                empty = 1;
++            }
++            // EL break;?
++        }
++        case 'c': {
++            if (!strcmp(tag,"col"))
++                empty = 1;
++            break;
++        }
++        case 'f': {
++            if (!strcmp(tag,"frame"))
++                empty = 1;
++            break;
++        }
++        case 'h': {
++            if (!strcmp(tag,"hr"))
++                empty = 1;
++            break;
++        }
++        case 'i': {
++            if (!strcmp(tag,"img") ||
++                    !strcmp(tag,"input")  ||
++                    !strcmp(tag,"isindex")) {
++                empty = 1;
++            }
++            break;
++        }
++        case 'l': {
++            if (!strcmp(tag,"link"))
++                empty = 1;
++            break;
++        }
++        case 'm': {
++            if (!strcmp(tag,"meta"))
++                empty = 1;
++            break;
++        }
++        case 'p': {
++            if (!strcmp(tag,"param"))
++                empty = 1;
++            break;
++        }
++        case 's': {
++            if (!strcmp(tag,"script") || !strcmp(tag,"style"))
++                scriptTag = 1;
++            break;
++        }
+     }
+ 
+ 
+@@ -5934,7 +5975,7 @@
      if (ret == TCL_ERROR) {
          char msg[64 + TCL_INTEGER_SPACE];
          sprintf(msg, "\n    (\"%s %s\" body line %d)", Tcl_GetString(objv[0]),
@@ -22,9 +571,22 @@ diff -ruN tDOM-0.8.3/generic/tcldom.c tdom/generic/tcldom.c
          Tcl_AddErrorInfo(interp, msg);
      }
  
+@@ -5954,10 +5995,10 @@
+ )
+ {
+     Tcl_HashEntry *entryPtr;
+-    int refCount, newEntry;
++    int newEntry;
+ 
+     Tcl_MutexLock(&tableMutex);
+-    refCount = ++doc->refCount;
++    ++doc->refCount;
+     entryPtr = Tcl_CreateHashEntry(&sharedDocs, (char*)doc, &newEntry);
+     if (newEntry) {
+         Tcl_SetHashValue(entryPtr, (ClientData)doc);
 diff -ruN tDOM-0.8.3/generic/tclexpat.c tdom/generic/tclexpat.c
 --- tDOM-0.8.3/generic/tclexpat.c	2008-03-04 21:34:28.000000000 +0100
-+++ tdom/generic/tclexpat.c	2017-04-22 23:28:10.211359350 +0200
++++ tdom/generic/tclexpat.c	2017-04-22 23:31:08.442314242 +0200
 @@ -38,7 +38,7 @@
  #include <string.h>
  #include <dom.h>
@@ -148,7 +710,7 @@ diff -ruN tDOM-0.8.3/generic/tclexpat.c tdom/generic/tclexpat.c
            }
 diff -ruN tDOM-0.8.3/generic/tdominit.c tdom/generic/tdominit.c
 --- tDOM-0.8.3/generic/tdominit.c	2005-08-26 00:59:49.000000000 +0200
-+++ tdom/generic/tdominit.c	2017-04-22 23:16:23.217305388 +0200
++++ tdom/generic/tdominit.c	2017-04-22 23:31:08.442314242 +0200
 @@ -65,6 +65,7 @@
  Tdom_Init (interp)
       Tcl_Interp *interp; /* Interpreter to initialize. */
@@ -192,7 +754,7 @@ diff -ruN tDOM-0.8.3/generic/tdominit.c tdom/generic/tdominit.c
                       (ClientData) &tdomStubs);
 diff -ruN tDOM-0.8.3/Makefile.in tdom/Makefile.in
 --- tDOM-0.8.3/Makefile.in	2007-03-03 00:43:53.000000000 +0100
-+++ tdom/Makefile.in	2017-04-22 22:39:12.245491170 +0200
++++ tdom/Makefile.in	2017-04-22 23:31:08.443314203 +0200
 @@ -365,7 +365,7 @@
  
  clean:  
