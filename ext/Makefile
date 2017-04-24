@@ -6,7 +6,7 @@ LIBRARYDIR=../library
 
 BCFLAGS?=-Oz -s WASM=1
 
-TCLLIBS= {ncgi,fileutil,cmdline,uri,html,javascript}
+TCLLIBS= {json,ncgi,fileutil,cmdline,uri,html,javascript}
 
 .PHONY: tdom
 
