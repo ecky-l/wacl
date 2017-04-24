@@ -1,7 +1,12 @@
 TDOMVERSION=0.8.3
+TCLLIBVERSION=1.18
+
 BUILDDIR=../jsbuild
+LIBRARYDIR=../library
 
 BCFLAGS?=-Oz -s WASM=1
+
+TCLLIBS= {ncgi,fileutil,cmdline,uri,html,javascript}
 
 .PHONY: tdom
 
@@ -35,3 +40,13 @@ tdomclean:
 
 tdomdistclean:
 	cd tdom && make distclean
+	
+tcllib:
+	mkdir -p $(LIBRARYDIR)
+	cp -rf tcllib-$(TCLLIBVERSION)/modules/$(TCLLIBS) $(LIBRARYDIR)
+	find $(LIBRARYDIR)/$(TCLLIBS) -type f | grep -v tcl$ | xargs rm -f
+	
+tcllibprep:
+	wget -nc http://prdownloads.sourceforge.net/tcllib/tcllib-$(TCLLIBVERSION).tar.gz
+	tar -xzf tcllib-$(TCLLIBVERSION).tar.gz
+	

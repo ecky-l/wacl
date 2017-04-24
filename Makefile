@@ -45,9 +45,12 @@ wasmtclinstall: wasmtcl.bc
 extensions: wasmtclinstall
 	cd ext && if [ ! -e tdom/Makefile ] ; then make tdomconfig ; fi && make tdominstall
 
-preGeneratedJs:
+library:
 	mkdir -p library
 	cp -r $(INSTALLDIR)/lib/tcl8* library/
+	cd ext && if [ ! -e tcllib* ] ; then make tcllibprep ; fi && make tcllib
+	
+preGeneratedJs: library
 	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-library.data --preload library@/usr/lib/ | tail -n +5 > library.js
 	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-custom.data --preload custom@/usr/lib/ | tail -n +5 > custom.js
 	cat js/preJsRequire.js library.js custom.js > preGeneratedJs.js
