@@ -6,7 +6,7 @@ BCFLAGS?=-Oz -s WASM=1
 .PHONY: tdom
 
 tdom:
-	cd tdom && emmake make
+	cd tdom && emmake make -j
 
 tdomconfig:
 	cd tdom && emconfigure ./configure --disable-load --disable-threads --disable-shared \

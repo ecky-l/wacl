@@ -28,27 +28,30 @@ WASMTCLEXPORTS=\
 		'_Tcl_GetStringResult',\
 	]"
 
-.PHONY: all wasmtcl.bc extensions clean distclean tclprep reset install uninstall
+.PHONY: all wasmtcl.bc extensions wasmtclinstall preGeneratedJs clean distclean tclprep reset install uninstall
 
 
 all: wasmtcl.js
 
-wasmtcl.js: wasmtcl.bc extensions preGeneratedJs.js
+wasmtcl.js: wasmtcl.bc extensions preGeneratedJs
 	emcc $(WASMFLAGS) $(WASMTCLEXPORTS) $(WASMLIBS) -o $@
 
-preGeneratedJs.js:
+wasmtcl.bc:
+	cd tcl/unix && emmake make -j
+
+wasmtclinstall: wasmtcl.bc
+	cd tcl/unix && make install
+	
+extensions: wasmtclinstall
+	cd ext && if [ ! -e tdom/Makefile ] ; then make tdomconfig ; fi && make tdominstall
+
+preGeneratedJs:
 	mkdir -p library
 	cp -r $(INSTALLDIR)/lib/tcl8* library/
 	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-library.data --preload library@/usr/lib/ | tail -n +5 > library.js
 	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-custom.data --preload custom@/usr/lib/ | tail -n +5 > custom.js
 	cat js/preJsRequire.js library.js custom.js > preGeneratedJs.js
 	rm -f {library,custom}.js
-
-extensions:
-	cd ext && if [ ! -e tdom/Makefile ] ; then make tdomconfig ; fi && make tdominstall
-
-wasmtcl.bc:
-	cd tcl/unix && emmake make && make install
 
 tclprep:
 	wget -nc http://prdownloads.sourceforge.net/tcl/tcl-core$(TCLVERSION)-src.tar.gz
