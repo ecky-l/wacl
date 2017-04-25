@@ -20,29 +20,29 @@ WASMFLAGS=\
 	#-s FORCE_ALIGNED_MEMORY=1 -s CLOSURE_COMPILER=1 -s CLOSURE_ANNOTATIONS=1\
 	#-s NODE_STDOUT_FLUSH_WORKAROUND=0 -s RUNNING_JS_OPTS=1
 
-WASMTCLEXPORTS=\
+WACLEXPORTS=\
 	-s EXPORTED_FUNCTIONS="[\
 		'_main',\
-		'_Wasmtcl_GetInterp',\
+		'_Wacl_GetInterp',\
 		'_Tcl_Eval',\
 		'_Tcl_GetStringResult',\
 	]"
 
-.PHONY: all wasmtcl.bc extensions wasmtclinstall preGeneratedJs clean distclean tclprep reset install uninstall
+.PHONY: all wacl.bc extensions waclinstall preGeneratedJs clean distclean tclprep reset install uninstall
 
 
-all: wasmtcl.js
+all: wacl.js
 
-wasmtcl.js: wasmtcl.bc extensions preGeneratedJs
-	emcc $(WASMFLAGS) $(WASMTCLEXPORTS) $(WASMLIBS) -o $@
+wacl.js: wacl.bc extensions preGeneratedJs
+	emcc $(WASMFLAGS) $(WACLEXPORTS) $(WASMLIBS) -o $@
 
-wasmtcl.bc:
+wacl.bc:
 	cd tcl/unix && emmake make -j
 
-wasmtclinstall: wasmtcl.bc
+waclinstall: wacl.bc
 	cd tcl/unix && make install
 	
-extensions: wasmtclinstall
+extensions: waclinstall
 	cd ext && if [ ! -e tdom/Makefile ] ; then make tdomconfig ; fi && make tdominstall
 
 library:
@@ -51,8 +51,8 @@ library:
 	cd ext && if [ ! -e tcllib* ] ; then make tcllibprep ; fi && make tcllib
 	
 preGeneratedJs: library
-	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-library.data --preload library@/usr/lib/ | tail -n +5 > library.js
-	python $(EMSCRIPTEN)/tools/file_packager.py wasmtcl-custom.data --preload custom@/usr/lib/ | tail -n +5 > custom.js
+	python $(EMSCRIPTEN)/tools/file_packager.py wacl-library.data --preload library@/usr/lib/ | tail -n +5 > library.js
+	python $(EMSCRIPTEN)/tools/file_packager.py wacl-custom.data --preload custom@/usr/lib/ | tail -n +5 > custom.js
 	cat js/preJsRequire.js library.js custom.js > preGeneratedJs.js
 	rm -f {library,custom}.js
 
@@ -60,7 +60,7 @@ tclprep:
 	wget -nc http://prdownloads.sourceforge.net/tcl/tcl-core$(TCLVERSION)-src.tar.gz
 	mkdir -p tcl
 	tar -C tcl --strip-components=1 -xf tcl-core$(TCLVERSION)-src.tar.gz
-	cd tcl && patch --verbose -p1 < ../wasmtcl.patch
+	cd tcl && patch --verbose -p1 < ../wacl.patch
 	cd tcl/unix && autoconf
 	cd ext && make tdomprep
 
@@ -73,22 +73,22 @@ config:
 
 install:
 	mkdir -p www/js/tcl/
-	cp wasmtcl.{js,wasm} www/js/tcl/
-	cp wasmtcl-{library,custom}.data www/js/tcl/
+	cp wacl.{js,wasm} www/js/tcl/
+	cp wacl-{library,custom}.data www/js/tcl/
 
 package: install
-	cd www && zip -r ../wasmtcl.zip *
+	cd www && zip -r ../wacl.zip *
 	
 uninstall:
 	rm -rf www/js/tcl/
 
 clean:
-	rm -rf library wasmtcl.js* *.data *.wasm *.js wasmtcl.zip $(INSTALLDIR) 
+	rm -rf library wacl.js* *.data *.wasm *.js wacl.zip $(INSTALLDIR) 
 	cd tcl/unix && make clean
 	cd ext && make tdomclean
 
 distclean:
-	rm -rf library wasmtcl.js* *.data *wasm *.js wasmtcl.zip $(INSTALLDIR)
+	rm -rf library wacl.js* *.data *wasm *.js wacl.zip $(INSTALLDIR)
 	cd tcl/unix && make distclean
 	cd ext && make tdomdistclean
 
@@ -96,10 +96,10 @@ patch:
 	wget -nc http://prdownloads.sourceforge.net/tcl/tcl-core$(TCLVERSION)-src.tar.gz
 	tar -xzf tcl-core$(TCLVERSION)-src.tar.gz
 	rm -rf tcl/unix/{autom4te.cache,configure} tcl$(TCLVERSION)/unix/configure
-	echo `diff -ruN tcl$(TCLVERSION) tcl > wasmtcl.patch`
+	echo `diff -ruN tcl$(TCLVERSION) tcl > wacl.patch`
 	rm -rf tcl$(TCLVERSION)
 
 reset:
 	@read -p "This nukes anything in ./tcl/, are you sure? Type 'YES I am sure' if so: " P && [ "$$P" = "YES I am sure" ]
-	rm -rf tcl $(INSTALLDIR) wasmtcl.js* preGeneratedJs.js
+	rm -rf tcl $(INSTALLDIR) wacl.js* preGeneratedJs.js
 

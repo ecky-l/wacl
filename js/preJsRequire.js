@@ -1,5 +1,5 @@
 
-define('tcl/wasmtcl', function () {
+define('tcl/wacl', function () {
   var _Interp = null;
   var _getInterp = null;
   var _eval = null;
@@ -26,15 +26,15 @@ define('tcl/wasmtcl', function () {
       wasmXHR.onerror = function() { reject('error '  + wasmXHR.status); }
       wasmXHR.send(null);
     });
-  })( _currPath + 'wasmtcl.wasm');
+  })( _currPath + 'wacl.wasm');
   
   var Module;
   if (typeof Module === 'undefined') Module = eval('(function() { try { return Module || {} } catch(e) { return {} } })()');
   
   Module['noInitialRun'] = false;
   Module['noExitRuntime'] = true;
-  Module['print'] = function(txt) { console.log('wasmtcl stdout: ' + txt); };
-  Module['printErr'] = function(txt) { console.error('wasmtcl stderr: ' + txt); };
+  Module['print'] = function(txt) { console.log('wacl stdout: ' + txt); };
+  Module['printErr'] = function(txt) { console.error('wacl stderr: ' + txt); };
   Module['filePackagePrefixURL'] = _currPath;
   
   Module['instantiateWasm'] = function(imports, successCallback) {
@@ -50,7 +50,7 @@ define('tcl/wasmtcl', function () {
   };
   
   Module['postRun'] = function () {
-    _getInterp = Module.cwrap('Wasmtcl_GetInterp', 'number', []);
+    _getInterp = Module.cwrap('Wacl_GetInterp', 'number', []);
     _eval = Module.cwrap('Tcl_Eval', 'number', ['number', 'string']);
     _getStringResult = Module.cwrap('Tcl_GetStringResult', 'string', ['number']);
     _Interp = _getInterp();
@@ -81,7 +81,7 @@ define('tcl/wasmtcl', function () {
      
       jswrap: function(fcn, returnType, argType) {
         var fnPtr = Runtime.addFunction(fcn);
-        return "::wasmtcl::jscall " + fnPtr + " " + returnType + " " + argType;
+        return "::wacl::jscall " + fnPtr + " " + returnType + " " + argType;
       },
      
       Eval: function(tclStr) {

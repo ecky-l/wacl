@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="stylesheet.css" media="screen">
   <!--
   <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
-  <script type="text/javascript" src="wasmtcl/wasmtcl.js"></script>
+  <script type="text/javascript" src="wacl/wacl.js"></script>
   -->
   <script data-main="js/main" src="js/require.js"></script>
-  <title>wasmTcl: Tcl in WebAssembly</title>
+  <title>wacl: Tcl in WebAssembly</title>
   <meta name="description" content="Tcl compiled with emscripten">
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -23,14 +23,14 @@
     <div id="container">
       <div id="main" role="main">
         <article class="_commented_markdown-body">
-          <h3>wasmTcl Test Page</h3>
+          <h3>Wacl Test Page</h3>
           <p>This is a simple test page for running Tcl in the browser on the client side. 
           Put your code in the box below and press Ctrl-Enter to eval it. For using the dom command, type e.g.:
           </p>
           <pre>
-::wasmtcl::dom attr "#dom-d &gt; span" textContent CHANGE
-::wasmtcl::dom css #dom-playground backgroundColor red
-::wasmtcl::dom css "#dom-playground li" borderColor blue
+::wacl::dom attr "#dom-d &gt; span" textContent CHANGE
+::wacl::dom css #dom-playground backgroundColor red
+::wacl::dom css "#dom-playground li" borderColor blue
           </pre>
           <div id="dom-playground">
             #dom-playground
@@ -56,8 +56,8 @@
           </div>
 
           <script>
-          require(['tcl/wasmtcl', 'jquery-3.2.0.min'], function(wasmTcl) {
-            wasmTcl.onReady(function (interp) {
+          require(['tcl/wacl', 'jquery-3.2.0.min'], function(wacl) {
+            wacl.onReady(function (interp) {
               'use strict';
               var $inbox = $('#tcl_in > textarea');
               var $outbox = $('#tcl_out > div > pre');

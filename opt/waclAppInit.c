@@ -1,22 +1,22 @@
 #include <tcl.h>
 #include <emscripten.h>
-#include "wasmtcl.h"
+#include "wacl.h"
 
 EXTERN int Tdom_Init     _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int Tdom_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
 
 /*
  * The main interpreter, 
- * initialized at startup and returned by Wasmtcl_GetMainInterp
+ * initialized at startup and returned by Wacl_GetMainInterp
  */
 static Tcl_Interp* mainInterp = NULL;
 
 static int
-Wasmtcl_AppInit(Tcl_Interp* interp)
+Wacl_AppInit(Tcl_Interp* interp)
 {
-    if (Wasmtcl_Init(interp) != TCL_OK)
+    if (Wacl_Init(interp) != TCL_OK)
     {
-        printf("Error while initialize Wasmtcl! Package will not be present");
+        printf("Error while initialize Wacl! Package will not be present");
     }
     if (Tdom_Init(interp) != TCL_OK)
     {
@@ -32,7 +32,7 @@ EmscriptenMainLoop()
 }
 
 Tcl_Interp*
-Wasmtcl_GetInterp()
+Wacl_GetInterp()
 {
 
     return mainInterp;
@@ -49,7 +49,7 @@ main(int argc, char** argv)
         printf("Error while calling Tcl_Init: %s", errInfo);
     }
 
-    Wasmtcl_AppInit(mainInterp);
+    Wacl_AppInit(mainInterp);
 
     emscripten_set_main_loop(EmscriptenMainLoop,0,0);
 

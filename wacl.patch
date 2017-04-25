@@ -1,6 +1,6 @@
 diff -ruN tcl8.6.6/compat/fake-rfc2553.c tcl/compat/fake-rfc2553.c
 --- tcl8.6.6/compat/fake-rfc2553.c	2016-02-25 21:12:36.000000000 +0100
-+++ tcl/compat/fake-rfc2553.c	2017-04-20 21:09:55.683374493 +0200
++++ tcl/compat/fake-rfc2553.c	2017-04-20 21:13:57.296858854 +0200
 @@ -35,6 +35,7 @@
   * that ai_family is AF_INET. Don't use it for another purpose.
   */
@@ -11,7 +11,7 @@ diff -ruN tcl8.6.6/compat/fake-rfc2553.c tcl/compat/fake-rfc2553.c
  
 diff -ruN tcl8.6.6/generic/tcl.h tcl/generic/tcl.h
 --- tcl8.6.6/generic/tcl.h	2016-07-22 16:43:05.000000000 +0200
-+++ tcl/generic/tcl.h	2017-04-20 21:09:55.683374493 +0200
++++ tcl/generic/tcl.h	2017-04-20 21:13:57.296858854 +0200
 @@ -1,3 +1,4 @@
 +#undef TCL_WIDE_INT_IS_LONG
  /*
@@ -19,7 +19,7 @@ diff -ruN tcl8.6.6/generic/tcl.h tcl/generic/tcl.h
   *
 diff -ruN tcl8.6.6/unix/configure.in tcl/unix/configure.in
 --- tcl8.6.6/unix/configure.in	2016-07-26 16:07:18.000000000 +0200
-+++ tcl/unix/configure.in	2017-04-20 21:09:55.683374493 +0200
++++ tcl/unix/configure.in	2017-04-20 21:13:57.296858854 +0200
 @@ -337,39 +337,6 @@
      AC_DEFINE(NO_STRING_H, 1, [Do we have <string.h>?]) ])
  
@@ -62,12 +62,12 @@ diff -ruN tcl8.6.6/unix/configure.in tcl/unix/configure.in
  #	and if the problem exists use a substitute procedure
 diff -ruN tcl8.6.6/unix/Makefile.in tcl/unix/Makefile.in
 --- tcl8.6.6/unix/Makefile.in	2016-07-26 16:07:18.000000000 +0200
-+++ tcl/unix/Makefile.in	2017-04-20 21:09:55.684374533 +0200
++++ tcl/unix/Makefile.in	2017-04-25 05:26:53.020618227 +0200
 @@ -227,6 +227,7 @@
  TOP_DIR			= @TCL_SRC_DIR@
  BUILD_DIR		= @builddir@
  GENERIC_DIR		= $(TOP_DIR)/generic
-+WASMTCL_DIR		= $(TOP_DIR)/../opt
++WACL_DIR		= $(TOP_DIR)/../opt
  TOMMATH_DIR		= $(TOP_DIR)/libtommath
  COMPAT_DIR		= $(TOP_DIR)/compat
  TOOL_DIR		= $(TOP_DIR)/tools
@@ -75,11 +75,11 @@ diff -ruN tcl8.6.6/unix/Makefile.in tcl/unix/Makefile.in
  ZLIB_OBJS = Zadler32.o Zcompress.o Zcrc32.o Zdeflate.o Zinfback.o \
  	Zinffast.o Zinflate.o Zinftrees.o Ztrees.o Zuncompr.o Zzutil.o
  
-+WASMTCL_OBJS = wasmtcl.o wasmtclAppInit.o
++WACL_OBJS = wacl.o waclAppInit.o
 +
  TCL_OBJS = ${GENERIC_OBJS} ${UNIX_OBJS} ${NOTIFY_OBJS} ${COMPAT_OBJS} \
 -	${OO_OBJS} @DL_OBJS@ @PLAT_OBJS@
-+	${OO_OBJS} ${WASMTCL_OBJS} @DL_OBJS@ @PLAT_OBJS@
++	${OO_OBJS} ${WACL_OBJS} @DL_OBJS@ @PLAT_OBJS@
  
  OBJS = ${TCL_OBJS} ${TOMMATH_OBJS} @DTRACE_OBJ@ @ZLIB_OBJS@
  
@@ -87,9 +87,9 @@ diff -ruN tcl8.6.6/unix/Makefile.in tcl/unix/Makefile.in
  	$(GENERIC_DIR)/tclAssembly.c \
  	$(GENERIC_DIR)/tclZlib.c
  
-+WASMTCL_SRCS = \
-+	$(WASMTCL_DIR)/wasmtcl.c \
-+	$(WASMTCL_DIR)/wasmtclAppInit.c
++WACL_SRCS = \
++	$(WACL_DIR)/wacl.c \
++	$(WACL_DIR)/waclAppInit.c
 +
  OO_SRCS = \
  	$(GENERIC_DIR)/tclOO.c \
@@ -99,7 +99,7 @@ diff -ruN tcl8.6.6/unix/Makefile.in tcl/unix/Makefile.in
  
  SRCS = $(GENERIC_SRCS) $(TOMMATH_SRCS) $(UNIX_SRCS) $(NOTIFY_SRCS) \
 -	$(OO_SRCS) $(STUB_SRCS) @PLAT_SRCS@ @ZLIB_SRCS@
-+	$(OO_SRCS) $(WASMTCL_SRCS) $(STUB_SRCS) @PLAT_SRCS@ @ZLIB_SRCS@
++	$(OO_SRCS) $(WACL_SRCS) $(STUB_SRCS) @PLAT_SRCS@ @ZLIB_SRCS@
  
  #--------------------------------------------------------------------------
  # Start of rules
@@ -134,18 +134,18 @@ diff -ruN tcl8.6.6/unix/Makefile.in tcl/unix/Makefile.in
  tclPkg.o: $(GENERIC_DIR)/tclPkg.c
  	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tclPkg.c
  
-+wasmtcl.o: $(WASMTCL_DIR)/wasmtcl.c
-+	$(CC) -c $(CC_SWITCHES) $(WASMTCL_DIR)/wasmtcl.c
++wacl.o: $(WACL_DIR)/wacl.c
++	$(CC) -c $(CC_SWITCHES) $(WACL_DIR)/wacl.c
 +
-+wasmtclAppInit.o: $(WASMTCL_DIR)/wasmtclAppInit.c
-+	$(CC) -c $(CC_SWITCHES) $(WASMTCL_DIR)/wasmtclAppInit.c
++waclAppInit.o: $(WACL_DIR)/waclAppInit.c
++	$(CC) -c $(CC_SWITCHES) $(WACL_DIR)/waclAppInit.c
 +
  # TIP #59, embedding of configuration information into the binary library.
  #
  # Part of Tcl's configuration information are the paths where it was installed
 diff -ruN tcl8.6.6/unix/tclUnixChan.c tcl/unix/tclUnixChan.c
 --- tcl8.6.6/unix/tclUnixChan.c	2016-02-25 21:12:38.000000000 +0100
-+++ tcl/unix/tclUnixChan.c	2017-04-20 21:11:35.959311721 +0200
++++ tcl/unix/tclUnixChan.c	2017-04-20 21:13:57.297858893 +0200
 @@ -1847,9 +1847,18 @@
  	/*
  	 * Wait for the event or a timeout.
@@ -168,7 +168,7 @@ diff -ruN tcl8.6.6/unix/tclUnixChan.c tcl/unix/tclUnixChan.c
  		SET_BITS(result, TCL_READABLE);
 diff -ruN tcl8.6.6/unix/tclUnixCompat.c tcl/unix/tclUnixCompat.c
 --- tcl8.6.6/unix/tclUnixCompat.c	2016-02-25 21:12:38.000000000 +0100
-+++ tcl/unix/tclUnixCompat.c	2017-04-20 21:09:55.684374533 +0200
++++ tcl/unix/tclUnixCompat.c	2017-04-20 21:13:57.297858893 +0200
 @@ -1,3 +1,4 @@
 +#undef HAVE_CPUID
  /*
@@ -176,7 +176,7 @@ diff -ruN tcl8.6.6/unix/tclUnixCompat.c tcl/unix/tclUnixCompat.c
   *
 diff -ruN tcl8.6.6/unix/tclUnixNotfy.c tcl/unix/tclUnixNotfy.c
 --- tcl8.6.6/unix/tclUnixNotfy.c	2016-03-23 12:43:13.000000000 +0100
-+++ tcl/unix/tclUnixNotfy.c	2017-04-20 21:09:55.684374533 +0200
++++ tcl/unix/tclUnixNotfy.c	2017-04-20 21:13:57.297858893 +0200
 @@ -1059,9 +1059,20 @@
  
  #else

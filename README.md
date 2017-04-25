@@ -1,17 +1,17 @@
-wasmtcl
+wacl
 =====
 
-This projects lets you compile tcl to Webassembly with emscripten. The code is 
+This is a distribution of Tcl and some extensions to Webassembly. The code is 
 available under the 3-clause BSD license (see "LICENSE").
 It compiles the tcl library and exposes some C api calls. At runtime a Tcl 
 interpreter is created and initialized, and the event loop is setup to run via 
-emscripten\_set\_main\_loop (see opt/wasmtclAppInit.c). Furthermore there is an
-extension package "wasmtcl", which provides commands:
+emscripten\_set\_main\_loop (see opt/waclAppInit.c). Furthermore there is an
+extension package "wacl", which provides commands:
 
-- wasmtcl::dom (with honors to Aidan Hobson's emtcl, where the code comes from)
+- wacl::dom (with honors to Aidan Hobson's emtcl, where the code comes from)
   * manipulate the browser dom
-- wasmtcl::jscall
-  * call prehooked javascript functions from wasmTcl
+- wacl::jscall
+  * call prehooked javascript functions from Wacl
 
 Currently supported is tcl - core\_8\_6\_6. It isTcl comes with a toy DOM library as a demo. See EXTRAS.
 
@@ -42,7 +42,7 @@ it and tcl/. The result is the patch that is applied above via "make tclprep"
 EXTRAS
 ------
 
-wasmTcl comes with a toy DOM library compiled into it by default
+Wacl comes with a toy DOM library compiled into it by default
 as a demonstration of how one could do interesting things.
 
 It currently is a command of the form `dom attr|css selector key val`. It sets
@@ -51,7 +51,7 @@ returned by the selector. It will return the number of elements modified. Note
 that style keys are in their camelcase form (backgroundColor vs background-color)
 as the styles are changed in the element style dictionary.
 
-You can see the code in opt/wasmtcl.c. It is compiled along with the other commands
-in the "wasmtcl" package and loaded into the default interpreter at startup.
+You can see the code in opt/wacl.c. It is compiled along with the other commands
+in the "wacl" package and loaded into the default interpreter at startup.
 
 

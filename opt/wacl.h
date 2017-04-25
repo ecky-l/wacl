@@ -2,7 +2,7 @@
 #define _EMTCL_H_
 
 int
-Wasmtcl_Init(Tcl_Interp* interp);
+Wacl_Init(Tcl_Interp* interp);
 
 #endif // _EMTCL_H_
 

@@ -186,31 +186,31 @@ JsCallCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST ob
 
 
 static void
-WasmtclDeleteNamespace(ClientData clientData)
+WaclDeleteNamespace(ClientData clientData)
 {
 }
 
 int
-Wasmtcl_Init(Tcl_Interp* interp)
+Wacl_Init(Tcl_Interp* interp)
 {
-    Tcl_Namespace* wasmtclNs = NULL;
+    Tcl_Namespace* waclNs = NULL;
     
     /* commands initialization */
-    wasmtclNs = Tcl_CreateNamespace(interp, "::wasmtcl", NULL, WasmtclDeleteNamespace);
+    waclNs = Tcl_CreateNamespace(interp, "::wacl", NULL, WaclDeleteNamespace);
     Tcl_CreateObjCommand(interp, 
-                         "::wasmtcl::dom", 
+                         "::wacl::dom", 
                          DomCmd, 
                          (ClientData) NULL, 
                          (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, 
-                         "::wasmtcl::jscall", 
+                         "::wacl::jscall", 
                          JsCallCmd, 
                          (ClientData) NULL, 
                          (Tcl_CmdDeleteProc *) NULL);
 
-    Tcl_Export(interp, wasmtclNs, "dom", 0);
-    Tcl_Export(interp, wasmtclNs, "jscall", 0);
-    Tcl_PkgProvide(interp, "wasmtcl", "1.0.0");
+    Tcl_Export(interp, waclNs, "dom", 0);
+    Tcl_Export(interp, waclNs, "jscall", 0);
+    Tcl_PkgProvide(interp, "wacl", "1.0.0");
     return TCL_OK;
 }
 
