@@ -63,6 +63,7 @@ waclprep:
 	cd tcl && patch --verbose -p1 < ../wacl.patch
 	cd tcl/unix && autoconf
 	cd ext && make tdomprep
+	cd ext && make tcllibprep
 
 config:
 	mkdir -p $(INSTALLDIR)
