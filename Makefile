@@ -56,7 +56,7 @@ preGeneratedJs: library
 	cat js/preJsRequire.js library.js custom.js > preGeneratedJs.js
 	rm -f {library,custom}.js
 
-tclprep:
+waclprep:
 	wget -nc http://prdownloads.sourceforge.net/tcl/tcl-core$(TCLVERSION)-src.tar.gz
 	mkdir -p tcl
 	tar -C tcl --strip-components=1 -xf tcl-core$(TCLVERSION)-src.tar.gz

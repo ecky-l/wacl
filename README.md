@@ -20,11 +20,10 @@ BUILD
 
 To build it, you need the emscripten sdk on your path:
 
-    $ make tclprep # One off prep - tcl-core download, hacks.patch application and
-                   # autoconf
-    $ make config  # create build directory and run emconfigure tcl/unix/configure
-    $ make [all]   # create the library and emtcl.js
-    $ make install # copy emtcl.js to ../www/js/
+    $ make waclprep  # One off prep - tcl-core download, hacks.patch application and autoconf
+    $ make config    # create build directory and run emconfigure tcl/unix/configure
+    $ make [all]     # create the library and emtcl.js
+    $ make install   # copy emtcl.js to ../www/js/
 
 If you want to totally reset all build files in ./tcl/ and start again:
 
