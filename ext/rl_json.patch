@@ -1,6 +1,6 @@
 diff -ruN rl_json-0.9.7/configure.ac rl_json/configure.ac
 --- rl_json-0.9.7/configure.ac	2016-12-28 13:08:49.000000000 +0100
-+++ rl_json/configure.ac	2017-04-29 12:47:21.486965040 +0200
++++ rl_json/configure.ac	2017-04-29 12:49:03.666100020 +0200
 @@ -168,7 +168,7 @@
  # link against the non-stubbed Tcl library.  Add Tk too if necessary.
  #--------------------------------------------------------------------
@@ -12,10 +12,12 @@ diff -ruN rl_json-0.9.7/configure.ac rl_json/configure.ac
  #--------------------------------------------------------------------
 diff -ruN rl_json-0.9.7/generic/main.c rl_json/generic/main.c
 --- rl_json-0.9.7/generic/main.c	2016-12-28 13:08:49.000000000 +0100
-+++ rl_json/generic/main.c	2017-04-29 12:47:46.006957314 +0200
-@@ -2616,8 +2616,10 @@
++++ rl_json/generic/main.c	2017-04-29 13:01:15.689480466 +0200
+@@ -2615,9 +2615,12 @@
+ int Rl_json_Init(Tcl_Interp* interp) //{{{
  {
  	struct interp_cx*	l = NULL;
++    Tcl_Namespace* rljsonNs = NULL;
  
 +#ifdef USE_TCL_STUBS
  	if (Tcl_InitStubs(interp, "8.5", 0) == NULL)
@@ -24,9 +26,26 @@ diff -ruN rl_json-0.9.7/generic/main.c rl_json/generic/main.c
  
  	Tcl_RegisterObjType(&json_type);
  
+@@ -2634,10 +2637,12 @@
+ 	l->kc_count = 0;
+ 	memset(&l->freemap, 0xFF, sizeof(l->freemap));
+ 
+-	Tcl_CreateObjCommand(interp, "::rl_json::json", jsonObjCmd, (ClientData)l, free_interp_cx);
+-	TEST_OK(Tcl_EvalEx(interp, "namespace eval ::rl_json {namespace export *}", -1, TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL));
+-
+-	TEST_OK(Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION));
++    rljsonNs = Tcl_CreateNamespace(interp, "::rljson", NULL, NULL);
++    Tcl_CreateObjCommand(interp, "::rljson::json", jsonObjCmd, (ClientData)l, free_interp_cx);
++    
++    Tcl_Export(interp, rljsonNs, "json", 0);
++	
++    TEST_OK(Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION));
+ 
+ 	return TCL_OK;
+ }
 diff -ruN rl_json-0.9.7/Makefile.in rl_json/Makefile.in
 --- rl_json-0.9.7/Makefile.in	2016-12-28 13:08:49.000000000 +0100
-+++ rl_json/Makefile.in	2017-04-29 12:47:57.817435260 +0200
++++ rl_json/Makefile.in	2017-04-29 12:49:03.668100101 +0200
 @@ -368,7 +368,7 @@
  
  clean:
