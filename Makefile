@@ -44,6 +44,7 @@ waclinstall: wacl.bc
 	
 extensions: waclinstall
 	cd ext && if [ ! -e tdom/Makefile ] ; then make tdomconfig ; fi && make tdominstall
+	cd ext && if [ ! -e rl_json/Makefile ] ; then make rljsonconfig ; fi && make rljsoninstall
 
 library:
 	mkdir -p library
@@ -63,6 +64,7 @@ waclprep:
 	cd tcl && patch --verbose -p1 < ../wacl.patch
 	cd tcl/unix && autoconf
 	cd ext && make tdomprep
+	cd ext && make rljsonprep
 	cd ext && make tcllibprep
 
 config:

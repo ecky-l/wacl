@@ -1,0 +1,24 @@
+diff -ruN rl_json-0.9.7/configure.ac rl_json/configure.ac
+--- rl_json-0.9.7/configure.ac	2016-12-28 13:08:49.000000000 +0100
++++ rl_json/configure.ac	2017-04-29 12:20:36.525176600 +0200
+@@ -168,7 +168,7 @@
+ # link against the non-stubbed Tcl library.  Add Tk too if necessary.
+ #--------------------------------------------------------------------
+ 
+-AC_DEFINE(USE_TCL_STUBS, 1, [Use Tcl stubs])
++#AC_DEFINE(USE_TCL_STUBS, 1, [Use Tcl stubs])
+ #AC_DEFINE(USE_TK_STUBS, 1, [Use Tk stubs])
+ 
+ #--------------------------------------------------------------------
+diff -ruN rl_json-0.9.7/Makefile.in rl_json/Makefile.in
+--- rl_json-0.9.7/Makefile.in	2016-12-28 13:08:49.000000000 +0100
++++ rl_json/Makefile.in	2017-04-29 12:20:25.552748173 +0200
+@@ -368,7 +368,7 @@
+ 
+ clean:
+ 	-test -z "$(BINARIES)" || rm -f $(BINARIES)
+-	-rm -f *.$(OBJEXT) core *.core
++	-rm -f *.$(OBJEXT) core *.core a.out*
+ 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
+ 
+ distclean: clean

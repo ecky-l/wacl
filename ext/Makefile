@@ -1,5 +1,6 @@
 TDOMVERSION=0.8.3
 TCLLIBVERSION=1.18
+RLJSONVERSION=0.9.7
 
 BUILDDIR=../jsbuild
 LIBRARYDIR=../library
@@ -15,7 +16,7 @@ tdom:
 
 tdomconfig:
 	cd tdom && emconfigure ./configure --disable-load --disable-threads --disable-shared \
-		--with-tcl=$(CURDIR)/../jsbuild/lib/ --prefix=$(CURDIR)/$(BUILDDIR)/lib/
+		--with-tcl=$(CURDIR)/$(BUILDDIR)/lib/ --prefix=$(CURDIR)/$(BUILDDIR)/lib/
 	cd tdom && sed -i 's/-O2/$(BCFLAGS)/g' Makefile
 
 tdomprep:
@@ -49,4 +50,32 @@ tcllib:
 tcllibprep:
 	wget -nc http://prdownloads.sourceforge.net/tcllib/tcllib-$(TCLLIBVERSION).tar.gz
 	tar -xzf tcllib-$(TCLLIBVERSION).tar.gz
+
+rljsoninstall: rljson
+	cd rl_json && make install
+	
+rljson:
+	cd rl_json && emmake make -j
+	
+rljsonconfig:
+	cd rl_json && emconfigure ./configure --disable-threads --disable-shared \
+		--with-tcl=$(CURDIR)/$(BUILDDIR)/lib/ --prefix=$(CURDIR)/$(BUILDDIR)/ \
+		--exec-prefix=$(CURDIR)/$(BUILDDIR)/
+
+rljsonprep:
+	wget -nc https://github.com/RubyLane/rl_json/archive/$(RLJSONVERSION).zip
+	mkdir rl_json && unzip -o -d /tmp/ $(RLJSONVERSION).zip \
+		&& mv /tmp/rl_json-$(RLJSONVERSION)/* rl_json/ && rm -rf /tmp/rl_json-$(RLJSONVERSION)
+
+rljsonpatch:
+	wget -nc https://github.com/RubyLane/rl_json/archive/$(RLJSONVERSION).zip
+	unzip -o $(RLJSONVERSION).zip
+	if [ -e rl_json/Makefile ] ; then cd rl_json && make distclean ; fi
+	rm -rf rl_json/{autom4te.cache,configure} rl_json-$(RLJSONVERSION)/{configure,.gitignore}
+	echo `diff -ruN rl_json-$(RLJSONVERSION) rl_json > rl_json.patch`
+	rm -rf rl_json-$(RLJSONVERSION)
+	
+reset:
+	@read -p "This deletes ./rl_jsontcl, ./tdom, tcllib*, are you sure? Type 'YES I am sure' if so: " P && [ "$$P" = "YES I am sure" ]
+	rm -rf rl_json tdom tcllib-1.18
 	
