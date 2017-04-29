@@ -34,8 +34,8 @@ diff -ruN rl_json-0.9.7/generic/main.c rl_json/generic/main.c
 -	TEST_OK(Tcl_EvalEx(interp, "namespace eval ::rl_json {namespace export *}", -1, TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL));
 -
 -	TEST_OK(Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION));
-+    rljsonNs = Tcl_CreateNamespace(interp, "::rljson", NULL, NULL);
-+    Tcl_CreateObjCommand(interp, "::rljson::json", jsonObjCmd, (ClientData)l, free_interp_cx);
++    rljsonNs = Tcl_CreateNamespace(interp, "::rl_json", NULL, NULL);
++    Tcl_CreateObjCommand(interp, "::rl_json::json", jsonObjCmd, (ClientData)l, free_interp_cx);
 +    
 +    Tcl_Export(interp, rljsonNs, "json", 0);
 +	
