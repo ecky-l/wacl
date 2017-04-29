@@ -40,7 +40,7 @@ tdomclean:
 	cd tdom && make clean
 
 tdomdistclean:
-	cd tdom && make distclean
+	if [ -e tdom/Makefile ] ; then cd tdom && make distclean ; fi
 	
 tcllib:
 	mkdir -p $(LIBRARYDIR)
@@ -53,6 +53,12 @@ tcllibprep:
 
 rljsoninstall: rljson
 	cd rl_json && make install
+
+rljsonclean:
+	cd rl_json && make clean
+
+rljsondistclean:
+	if [ -e rl_json/Makefile ] ; then cd rl_json && make distclean ; fi
 	
 rljson:
 	cd rl_json && emmake make -j
@@ -66,6 +72,8 @@ rljsonprep:
 	wget -nc https://github.com/RubyLane/rl_json/archive/$(RLJSONVERSION).zip
 	mkdir rl_json && unzip -o -d /tmp/ $(RLJSONVERSION).zip \
 		&& mv /tmp/rl_json-$(RLJSONVERSION)/* rl_json/ && rm -rf /tmp/rl_json-$(RLJSONVERSION)
+	cd rl_json && patch --verbose -p1 < ../rl_json.patch
+	cd rl_json && autoconf
 
 rljsonpatch:
 	wget -nc https://github.com/RubyLane/rl_json/archive/$(RLJSONVERSION).zip

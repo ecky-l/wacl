@@ -1,11 +1,13 @@
 # Tcl version. Relies on tcl-core$(TCLVERSION) being vailable at sourceforge
 TCLVERSION?=8.6.6
 TDOMVERSION?=0.8.3
+RLJSONVERSION?=0.9.7
 
 INSTALLDIR=jsbuild
 
 WASMLIBS=$(INSTALLDIR)/lib/libtcl8.6.a \
-	   $(INSTALLDIR)/lib/tdom$(TDOMVERSION)/libtdom$(TDOMVERSION).a
+	   $(INSTALLDIR)/lib/tdom$(TDOMVERSION)/libtdom$(TDOMVERSION).a \
+	   $(INSTALLDIR)/lib/rl_json$(RLJSONVERSION)/librl_json$(RLJSONVERSION).a
 
 # Optimisation to use for generating bc
 BCFLAGS?=-Oz -s WASM=1
@@ -92,8 +94,9 @@ clean:
 
 distclean:
 	rm -rf library wacl.js* *.data *wasm *.js wacl.zip $(INSTALLDIR)
-	cd tcl/unix && make distclean
+	if [ -e tcl/unix/Makefile ] ; then cd tcl/unix && make distclean ; fi
 	cd ext && make tdomdistclean
+	cd ext && make rljsondistclean
 
 patch:
 	wget -nc http://prdownloads.sourceforge.net/tcl/tcl-core$(TCLVERSION)-src.tar.gz

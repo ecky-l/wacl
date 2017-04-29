@@ -1,6 +1,6 @@
 diff -ruN rl_json-0.9.7/configure.ac rl_json/configure.ac
 --- rl_json-0.9.7/configure.ac	2016-12-28 13:08:49.000000000 +0100
-+++ rl_json/configure.ac	2017-04-29 12:20:36.525176600 +0200
++++ rl_json/configure.ac	2017-04-29 12:47:21.486965040 +0200
 @@ -168,7 +168,7 @@
  # link against the non-stubbed Tcl library.  Add Tk too if necessary.
  #--------------------------------------------------------------------
@@ -10,9 +10,23 @@ diff -ruN rl_json-0.9.7/configure.ac rl_json/configure.ac
  #AC_DEFINE(USE_TK_STUBS, 1, [Use Tk stubs])
  
  #--------------------------------------------------------------------
+diff -ruN rl_json-0.9.7/generic/main.c rl_json/generic/main.c
+--- rl_json-0.9.7/generic/main.c	2016-12-28 13:08:49.000000000 +0100
++++ rl_json/generic/main.c	2017-04-29 12:47:46.006957314 +0200
+@@ -2616,8 +2616,10 @@
+ {
+ 	struct interp_cx*	l = NULL;
+ 
++#ifdef USE_TCL_STUBS
+ 	if (Tcl_InitStubs(interp, "8.5", 0) == NULL)
+ 		return TCL_ERROR;
++#endif // USE_TCL_STUBS
+ 
+ 	Tcl_RegisterObjType(&json_type);
+ 
 diff -ruN rl_json-0.9.7/Makefile.in rl_json/Makefile.in
 --- rl_json-0.9.7/Makefile.in	2016-12-28 13:08:49.000000000 +0100
-+++ rl_json/Makefile.in	2017-04-29 12:20:25.552748173 +0200
++++ rl_json/Makefile.in	2017-04-29 12:47:57.817435260 +0200
 @@ -368,7 +368,7 @@
  
  clean:
