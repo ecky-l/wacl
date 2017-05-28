@@ -1,0 +1,9 @@
+*.tar.gz
+*.zip
+*.data
+preGeneratedJs.js
+wacl.js
+wacl.wasm
+/jsbuild/
+/library/
+/tcl/

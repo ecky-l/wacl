@@ -1,0 +1,7 @@
+*.zip
+*.tar.gz
+*.tgz
+/tcllib*/
+/tdom/
+/rl_json/
+
