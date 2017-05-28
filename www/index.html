@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheet.css" media="screen">
+  <!--
+  <script type="text/javascript" src="jquery-3.2.0.min.js"></script>
+  <script type="text/javascript" src="wacl/wacl.js"></script>
+  -->
+  <script data-main="js/main" src="js/require.js"></script>
+  <title>wacl: Tcl in WebAssembly</title>
+  <meta name="description" content="Tcl compiled with emscripten">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <div id="container">
+      <div id="main" role="main">
+        <article class="_commented_markdown-body">
+          <h3>Wacl Test Page</h3>
+          <p>This is a simple test page for running Tcl in the browser on the client side. 
+          Put your code in the box below and press Ctrl-Enter to eval it. For using the dom command, type e.g.:
+          </p>
+          <pre>
+::wacl::dom attr "#dom-d &gt; span" textContent CHANGE
+::wacl::dom css #dom-playground backgroundColor red
+::wacl::dom css "#dom-playground li" borderColor blue
+          </pre>
+          <div id="dom-playground">
+            #dom-playground
+            <div id="dom-a">div#dom-a</div>
+            <div id="dom-b">div#dom-b
+              <div class="dom-subchild">div.dom-child</div>
+            </div>
+            <div id="dom-c">div#dom-c
+              <ul class="dom-subchild">ul.dom-subchild
+                <li>li</li>
+                <li>li</li>
+              </ul>
+            </div>
+            <div id="dom-d">div#dom-d<br>
+              <span class="dom-subchild">span.dom-subchild</span>
+            </div>
+          </div>
+          <button id="tcl_run">Run!</button>
+          <button id="tcl_test">Just for testing</button>
+          <div class="demoarea">
+            <div id="tcl_out"><div><pre></pre></div></div>
+            <div id="tcl_in"><textarea></textarea></div>
+          </div>
+
+          <script>
+          require(['tcl/wacl', 'jquery-3.2.0.min'], function(wacl) {
+            wacl.onReady(function (interp) {
+              'use strict';
+              var $inbox = $('#tcl_in > textarea');
+              var $outbox = $('#tcl_out > div > pre');
+              var outln = function (val) {
+                $outbox.text($outbox.text() + val + '\n');
+                $outbox[0].scrollTop = $outbox[0].scrollHeight;
+              }
+              interp.stdout = interp.stderr = outln;
+              
+              $('#tcl_run').on('click', function () {
+                outln(interp.Eval($('#tcl_in > textarea').val()));
+              });
+              
+              $('#tcl_test').on('click', function() {
+                var w = interp.jswrap(function(x) {
+                    console.log('Argument x: ' + interp.ptr2str(x));
+                    return interp.str2ptr("hello from javaScript");
+                }, 'string', 'string');
+                console.log(w);
+              })
+              
+              $inbox.keydown(function (e) {
+                // Ctrl-Enter pressed
+                if ((e.keyCode == 10 || e.keyCode == 13) && e.ctrlKey) {
+                  outln('% ' + $inbox.val());
+                  try {
+                    outln(interp.Eval($('#tcl_in > textarea').val()));
+                  } catch (e) {
+                    outln(e.errorInfo);
+                  }
+                  $inbox.val('');
+                }
+              });
+              outln(interp.Eval('puts "Tcl version: [info patchlevel]"'));
+            });
+          });
+          </script>
+        </article>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+</html>
+

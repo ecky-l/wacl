@@ -1,0 +1,22 @@
+
+Directory for custom Tcl code
+=============================
+
+This directory is turned into a .data file during the build process and loaded 
+at startup together with (in parallel to) the wacl-library.data file. Both
+of these data files are mounted to /usr/lib on startup and are put on the 
+$auto_path of Wacl.
+
+You can put your own packages and tcl code here in this directory. It will be
+available in Wacl on the auto_path, i.e. if the directories here contain 
+a pkgIndex.tcl file with the usual signature (see the Tcl documentation for 
+the pkg_mkIndex command), you can load them with [package require ...] inside
+Wacl.
+
+It is not necessary to completely build Wacl when your Tcl packages change.
+In order to update the contents of wacl-custom.data, you just need to put
+your updated Tcl packages here and then run
+
+python $(EMSCRIPTEN)/tools/file_packager.py wacl-custom.data --preload custom@/usr/lib/ >
+
+(you need python and the emscripten SDK on your PATH, though).
