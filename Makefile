@@ -78,15 +78,12 @@ config:
 
 install:
 	mkdir -p www/js/tcl/
-	cp wacl.{js,wasm} www/js/tcl/
-	cp wacl-{library,custom}.data www/js/tcl/
+	cp wacl.{js,wasm} ecky-l.github.io/wacl/js/tcl/
+	cp wacl-{library,custom}.data ecky-l.github.io/wacl/js/tcl/
 
 package: install
 	cd www && zip -r ../wacl.zip *
 	
-uninstall:
-	rm -rf www/js/tcl/
-
 clean:
 	rm -rf library wacl.js* *.data *.wasm *.js wacl.zip $(INSTALLDIR) 
 	cd tcl/unix && make clean
