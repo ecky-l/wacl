@@ -1,7 +1,6 @@
 # wacl
-A Tcl distibution for WebAssembly or Javascript
 
-### A Tcl distribution for Webassembly or Javascript
+### A Tcl distribution for WebAssembly or Javascript
 
 This is a Tcl distribution for WebAssembly (webassembly.org). It enables Web developers to embed a Tcl interpreter in the browser and integrate Tcl with JavaScript. It enables Tcl developers to use their tools and language of choice to create client side web applications. It enables all developers to reuse a great and (over decades) grown code base of useful packages and scripts, such as Tcllib, to be used in web browsers.
 
